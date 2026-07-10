@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forjador de Personagens — Ultima Online</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0e17;
+    --bg-2: #0e1421;
+    --panel: #121a28;
+    --panel-2: #17202f;
+    --border: #263349;
+    --border-bright: #3a4d6b;
+    --text: #e7ecf5;
+    --text-dim: #8b96ab;
+    --gold: #e0b23a;
+    --gold-bright: #f5d06e;
+    --gold-dim: #7a611f;
+    --teal: #2dd4bf;
+    --teal-dark: #157a6d;
+    --red: #ef4444;
+    --red-dim: #7a2323;
+    --shadow: rgba(0,0,0,.6);
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(45,212,191,.06), transparent 40%),
+      radial-gradient(circle at 85% 10%, rgba(224,178,58,.05), transparent 45%),
+      var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 28px 18px 60px;
+  }
+
+  h1,h2,h3, .display, .tab, .preset-btn{
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: .02em;
+  }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+
+  .cut{
+    clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+  }
+  .cut-sm{
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  }
+
+  /* ---------------- HEADER ---------------- */
+  .banner{
+    max-width: 1220px; margin: 0 auto 22px;
+    background: linear-gradient(135deg, var(--panel-2), var(--panel));
+    border: 1px solid var(--border-bright);
+    padding: 22px 28px;
+    display:flex; flex-wrap:wrap; gap:20px; align-items:center; justify-content:space-between;
+    box-shadow: 0 12px 32px var(--shadow), inset 0 0 40px rgba(45,212,191,.03);
+    position: relative;
+  }
+  .banner::before{
+    content:""; position:absolute; left:0; top:0; bottom:0; width:3px;
+    background: linear-gradient(180deg, var(--teal), var(--gold));
+  }
+  .banner-title h1{
+    margin:0; font-size: clamp(24px,3.4vw,36px); font-weight:700;
+    background: linear-gradient(90deg, var(--gold-bright), var(--teal));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .banner-title p{ margin:6px 0 0; color: var(--text-dim); font-size:14.5px; }
+
+  .gems{ display:flex; gap:16px; }
+  .gem{
+    width: 108px; padding: 12px 8px 10px;
+    background: linear-gradient(160deg, var(--panel-2), var(--bg-2));
+    border: 1px solid var(--border-bright);
+    text-align:center;
+    position: relative;
+  }
+  .gem.stat{ box-shadow: 0 0 0 1px rgba(45,212,191,.15), 0 0 18px rgba(45,212,191,.12); }
+  .gem.skill{ box-shadow: 0 0 0 1px rgba(224,178,58,.18), 0 0 18px rgba(224,178,58,.12); }
+  .gem .num{ font-size: 26px; font-weight:700; line-height:1; }
+  .gem.stat .num{ color: var(--teal); }
+  .gem.skill .num{ color: var(--gold-bright); }
+  .gem .lbl{ font-size:9.5px; text-transform:uppercase; letter-spacing:.1em; color: var(--text-dim); margin-top:4px; }
+  .gem.empty .num{ color: var(--red); }
+
+  /* ---------------- LAYOUT ---------------- */
+  .layout{ max-width:1220px; margin:0 auto; display:grid; grid-template-columns: 320px 1fr; gap:20px; align-items:start; }
+  @media (max-width: 900px){ .layout{ grid-template-columns: 1fr; } }
+
+  .panel{
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 18px 20px 20px;
+  }
+  .panel h2{
+    margin:0 0 14px; font-size:16px; font-weight:600; color: var(--gold-bright);
+    display:flex; align-items:center; gap:8px; text-transform:uppercase;
+    border-bottom: 1px solid var(--border-bright); padding-bottom:8px;
+  }
+  .panel h2 .bar{ width:3px; height:16px; background: var(--teal); display:inline-block; }
+
+  /* ---------------- PRESETS ---------------- */
+  .preset-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px; }
+  .preset-btn{
+    font-size:12.5px; font-weight:600; letter-spacing:.02em;
+    background: var(--panel-2); color: var(--text);
+    border: 1px solid var(--border-bright);
+    padding: 10px 6px; cursor:pointer; text-align:center;
+    transition: all .12s ease;
+  }
+  .preset-btn:hover{ border-color: var(--teal); color: var(--teal); }
+  .preset-btn.active{ background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color:#1a1305; border-color: var(--gold-bright); }
+
+  .util-row{ display:flex; gap:8px; margin-bottom:18px; }
+  .util-btn{
+    flex:1; font-family:'Inter',sans-serif; font-weight:600; font-size:12.5px;
+    background:transparent; border:1px solid var(--border-bright); color: var(--text-dim);
+    padding:8px 4px; cursor:pointer;
+  }
+  .util-btn:hover{ border-color: var(--red); color: var(--red); }
+
+  /* ---------------- STATS ---------------- */
+  .stat-row{ margin-bottom:14px; }
+  .stat-row label{ display:flex; justify-content:space-between; font-size:13.5px; font-weight:600; margin-bottom:5px; color:var(--text); }
+  .stat-row label .val{ color: var(--teal); }
+  input[type=range]{ width:100%; accent-color: var(--teal); }
+  .bigbar{ height:10px; background: rgba(255,255,255,.06); margin-top:6px; overflow:hidden; }
+  .bigbar > div{ height:100%; background: linear-gradient(90deg, var(--teal-dark), var(--teal)); transition:width .15s ease; }
+  .status-msg{ font-size:12px; color: var(--text-dim); min-height:16px; margin-top:6px; }
+
+  /* ---------------- SAVE/LOAD ---------------- */
+  .save-box input[type=text]{
+    width:100%; padding:8px 10px; font-family:'Inter',sans-serif; font-size:13.5px;
+    background: var(--bg-2); border:1px solid var(--border-bright); color: var(--text);
+    margin-bottom:8px;
+  }
+  .saved-list{ max-height:130px; overflow-y:auto; margin-top:8px; }
+  .saved-item{ display:flex; justify-content:space-between; align-items:center; font-size:12.5px; padding:5px 6px; }
+  .saved-item:nth-child(odd){ background: rgba(255,255,255,.03); }
+  .saved-item button{ border:none; background:none; cursor:pointer; font-size:11.5px; margin-left:6px; color: var(--teal); }
+  .saved-item button.del{ color: var(--red); }
+
+  /* ---------------- SKILLS ---------------- */
+  .skills-top{ display:flex; flex-wrap:wrap; gap:14px; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .search-box{
+    flex: 1; min-width:200px;
+    background: var(--bg-2); border:1px solid var(--border-bright);
+    display:flex; align-items:center; gap:8px; padding: 8px 12px;
+  }
+  .search-box input{
+    flex:1; background:none; border:none; outline:none; color:var(--text); font-family:'Inter',sans-serif; font-size:14px;
+  }
+  .search-box svg{ opacity:.5; flex-shrink:0; }
+
+  .tabs{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+  .tab{
+    font-size:12.5px; font-weight:600; padding:7px 13px; cursor:pointer;
+    background: var(--panel-2); border:1px solid var(--border); color: var(--text-dim);
+    text-transform:uppercase; letter-spacing:.03em;
+  }
+  .tab:hover{ color: var(--text); border-color: var(--border-bright); }
+  .tab.active{ background: var(--teal-dark); color:#eafffb; border-color: var(--teal); }
+
+  .summary-chips{
+    display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px;
+    min-height: 30px;
+    padding: 8px; background: rgba(255,255,255,.02); border:1px dashed var(--border-bright);
+  }
+  .summary-chips .empty-hint{ font-size:12px; color: var(--text-dim); font-style:italic; }
+  .chip{
+    display:flex; align-items:center; gap:6px;
+    background: var(--panel-2); border:1px solid var(--gold-dim);
+    padding: 4px 6px 4px 10px; font-size:12px;
+  }
+  .chip .n{ color: var(--gold-bright); font-weight:600; }
+  .chip button{
+    border:none; background:none; color: var(--red); cursor:pointer; font-size:13px; line-height:1;
+    padding: 2px 4px;
+  }
+
+  .skill-list{ display:flex; flex-direction:column; gap:2px; }
+  .skill-row{
+    display:grid; grid-template-columns: 1fr 90px 46px; gap:12px; align-items:center;
+    padding: 9px 10px; border-bottom: 1px solid var(--border);
+  }
+  .skill-row:hover{ background: rgba(255,255,255,.02); }
+  .skill-row .name{ font-size:14px; }
+  .skill-row .name small{ display:block; font-size:11px; color: var(--text-dim); font-weight:400; }
+  .skill-row input[type=range]{ accent-color: var(--gold); height:14px; }
+  .skill-row .v{ text-align:right; color: var(--gold-bright); font-size:13.5px; }
+  .no-results{ padding: 20px; text-align:center; color: var(--text-dim); font-size:13.5px; }
+
+  ::-webkit-scrollbar{ width:8px; }
+  ::-webkit-scrollbar-thumb{ background: var(--border-bright); }
+  ::-webkit-scrollbar-track{ background: transparent; }
+
+  footer{ max-width:1220px; margin:22px auto 0; text-align:center; color: var(--text-dim); font-size:11.5px; }
+</style>
+</head>
+<body>
+
+  <div class="banner cut">
+    <div class="banner-title">
+      <h1>Forjador de Personagens</h1>
+      <p>Ultima Online — monte stats e perícias antes de partir para Britannia</p>
+    </div>
+    <div class="gems">
+      <div class="gem stat cut-sm" id="statGem">
+        <div class="num mono" id="statGemNum">225</div>
+        <div class="lbl">Pontos de Stat</div>
+      </div>
+      <div class="gem skill cut-sm" id="skillGem">
+        <div class="num mono" id="skillGemNum">750</div>
+        <div class="lbl">Pontos de Skill</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- ASIDE -->
+    <div class="aside-col" style="display:flex; flex-direction:column; gap:18px;">
+
+      <div class="panel cut">
+        <h2><span class="bar"></span> Builds Prontas</h2>
+        <div class="preset-grid" id="presetGrid"></div>
+        <div class="util-row">
+          <button class="util-btn" id="resetBtn">Zerar Tudo</button>
+          <button class="util-btn" id="copyBtn">Copiar Build</button>
+        </div>
+      </div>
+
+      <div class="panel cut">
+        <h2><span class="bar"></span> Atributos <span class="mono" style="font-size:11px;color:var(--text-dim);text-transform:none;">cap 225</span></h2>
+        <div class="stat-row">
+          <label>Força (STR) <span class="val mono" id="strVal">10</span></label>
+          <input type="range" id="strRange" min="10" max="125" value="10">
+        </div>
+        <div class="stat-row">
+          <label>Destreza (DEX) <span class="val mono" id="dexVal">10</span></label>
+          <input type="range" id="dexRange" min="10" max="125" value="10">
+        </div>
+        <div class="stat-row">
+          <label>Inteligência (INT) <span class="val mono" id="intVal">10</span></label>
+          <input type="range" id="intRange" min="10" max="125" value="10">
+        </div>
+        <div class="bigbar"><div id="statBarFill" style="width:13%"></div></div>
+        <p class="status-msg" id="statMsg">Restam 195 pontos de atributo.</p>
+      </div>
+
+      <div class="panel save-box cut">
+        <h2><span class="bar"></span> Salvar / Carregar</h2>
+        <input type="text" id="buildName" placeholder="Nome do build">
+        <button class="util-btn" id="saveBtn" style="width:100%; border-color: var(--teal); color: var(--teal);">Salvar Build</button>
+        <div class="saved-list" id="savedList"></div>
+        <p class="status-msg" id="saveMsg"></p>
+      </div>
+
+    </div>
+
+    <!-- MAIN -->
+    <div class="panel cut">
+      <h2 style="margin-bottom:16px;"><span class="bar"></span> Perícias <span class="mono" style="font-size:11px;color:var(--text-dim);text-transform:none;">máx. 100 cada / cap 750</span></h2>
+
+      <div class="bigbar" style="margin-bottom:6px;"><div id="skillBarFill" style="width:0%; background: linear-gradient(90deg, var(--gold-dim), var(--gold));"></div></div>
+      <p class="status-msg" id="skillMsg" style="margin-bottom:16px;">Restam 750 pontos de perícia.</p>
+
+      <div class="skills-top">
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="searchInput" placeholder="Buscar perícia... (ex: mining, magery)">
+        </div>
+      </div>
+
+      <div class="tabs" id="tabsRow"></div>
+
+      <div class="summary-chips" id="summaryChips"><span class="empty-hint">Nenhuma perícia selecionada ainda — escolha uma build ou ajuste abaixo.</span></div>
+
+      <div class="skill-list" id="skillList"></div>
+    </div>
+  </div>
+
+  <footer>Ferramenta não-oficial de planejamento — Ultima Online é marca da Broadsword/EA. Stat cap 225 · Skill cap 750 · máx. 100 por perícia.</footer>
+
+<script>
+const STAT_CAP = 225;
+const SKILL_CAP = 750;
+
+const SKILL_CATEGORIES = [
+  { key:'animal', label:'Animais', skills:['Animal Taming','Animal Lore','Veterinary','Herding'] },
+  { key:'bardic', label:'Bardo', skills:['Musicianship','Discordance','Peacemaking','Provocation'] },
+  { key:'combat', label:'Combate', skills:['Archery','Fencing','Mace Fighting','Parrying','Swordsmanship','Tactics','Throwing','Wrestling','Anatomy','Healing','Resisting Spells'] },
+  { key:'magic', label:'Magia', skills:['Magery','Evaluate Intelligence','Meditation','Focus','Chivalry','Necromancy','Spellweaving','Spirit Speak','Mysticism','Bushido','Ninjitsu','Imbuing'] },
+  { key:'crafting', label:'Ofícios', skills:['Alchemy','Blacksmithy','Bowcraft/Fletching','Carpentry','Cartography','Cooking','Inscription','Tailoring','Tinkering'] },
+  { key:'gathering', label:'Coleta & Saber', skills:['Mining','Lumberjacking','Fishing','Camping','Item Identification','Arms Lore','Taste Identification','Forensic Evaluation'] },
+  { key:'stealth', label:'Furtividade', skills:['Hiding','Stealth','Stealing','Snooping','Lockpicking','Detect Hidden','Remove Trap','Poisoning'] },
+  { key:'misc', label:'Diversos', skills:['Begging'] },
+];
+const ALL_SKILLS = SKILL_CATEGORIES.flatMap(c => c.skills);
+function categoryOf(name){ return SKILL_CATEGORIES.find(c => c.skills.includes(name))?.label || ''; }
+
+const PRESETS = {
+  tamer: { label:'Tamer (Mago)', stats:{str:30,dex:40,int:155},
+    skills:{'Animal Taming':100,'Animal Lore':100,'Veterinary':100,'Magery':100,'Meditation':100,'Focus':100,'Musicianship':100,'Discordance':50} },
+  miner: { label:'Minerador/Ferreiro', stats:{str:90,dex:50,int:85},
+    skills:{'Mining':100,'Item Identification':100,'Blacksmithy':100,'Tinkering':100,'Arms Lore':100,'Lumberjacking':50,'Carpentry':100,'Camping':50} },
+  worker: { label:'Full Worker', stats:{str:100,dex:45,int:80},
+    skills:{'Mining':75,'Lumberjacking':75,'Blacksmithy':75,'Tailoring':75,'Carpentry':75,'Tinkering':75,'Cooking':75,'Bowcraft/Fletching':75,'Alchemy':75,'Inscription':75} },
+  magewarrior: { label:'Mago Guerreiro', stats:{str:90,dex:45,int:90},
+    skills:{'Magery':100,'Evaluate Intelligence':100,'Meditation':100,'Resisting Spells':100,'Swordsmanship':100,'Tactics':100,'Anatomy':100,'Healing':50} },
+  stealtharcher: { label:'Arqueiro Furtivo', stats:{str:60,dex:120,int:45},
+    skills:{'Archery':100,'Tactics':100,'Anatomy':100,'Healing':100,'Hiding':100,'Stealth':100,'Ninjitsu':50,'Resisting Spells':100} },
+  bard: { label:'Bardo Provo/Paz', stats:{str:50,dex:90,int:85},
+    skills:{'Musicianship':100,'Provocation':100,'Peacemaking':100,'Fencing':100,'Tactics':100,'Anatomy':100,'Healing':100,'Resisting Spells':50} },
+  thief: { label:'Ladrão', stats:{str:40,dex:140,int:45},
+    skills:{'Stealing':100,'Hiding':100,'Stealth':100,'Snooping':100,'Lockpicking':100,'Detect Hidden':50,'Remove Trap':50,'Tactics':50,'Fencing':100} },
+  dexxer: { label:'Dexxer PvP', stats:{str:100,dex:100,int:25},
+    skills:{'Swordsmanship':100,'Tactics':100,'Anatomy':100,'Healing':100,'Parrying':100,'Chivalry':100,'Resisting Spells':50,'Focus':100} },
+};
+
+let stats = { str:10, dex:10, int:10 };
+let skillVals = {}; ALL_SKILLS.forEach(s => skillVals[s]=0);
+let activeTab = SKILL_CATEGORIES[0].key;
+let searchTerm = '';
+
+const strRange=document.getElementById('strRange'), dexRange=document.getElementById('dexRange'), intRange=document.getElementById('intRange');
+const strVal=document.getElementById('strVal'), dexVal=document.getElementById('dexVal'), intVal=document.getElementById('intVal');
+const statBarFill=document.getElementById('statBarFill'), statMsg=document.getElementById('statMsg');
+const statGem=document.getElementById('statGem'), statGemNum=document.getElementById('statGemNum');
+const skillBarFill=document.getElementById('skillBarFill'), skillMsg=document.getElementById('skillMsg');
+const skillGem=document.getElementById('skillGem'), skillGemNum=document.getElementById('skillGemNum');
+const presetGrid=document.getElementById('presetGrid');
+const tabsRow=document.getElementById('tabsRow');
+const skillList=document.getElementById('skillList');
+const summaryChips=document.getElementById('summaryChips');
+const searchInput=document.getElementById('searchInput');
+
+Object.entries(PRESETS).forEach(([key,p]) => {
+  const btn=document.createElement('button');
+  btn.className='preset-btn'; btn.textContent=p.label; btn.dataset.key=key;
+  btn.addEventListener('click', () => applyPreset(key));
+  presetGrid.appendChild(btn);
+});
+
+SKILL_CATEGORIES.forEach(cat => {
+  const tab=document.createElement('button');
+  tab.className='tab'; tab.textContent=cat.label; tab.dataset.key=cat.key;
+  tab.addEventListener('click', () => { activeTab=cat.key; searchInput.value=''; searchTerm=''; renderSkillList(); refreshTabs(); });
+  tabsRow.appendChild(tab);
+});
+refreshTabs();
+
+function refreshTabs(){
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.key===activeTab));
+}
+
+searchInput.addEventListener('input', e => { searchTerm = e.target.value.trim().toLowerCase(); renderSkillList(); });
+
+function applyPreset(key){
+  const p=PRESETS[key]; if(!p) return;
+  stats.str=p.stats.str; stats.dex=p.stats.dex; stats.int=p.stats.int;
+  ALL_SKILLS.forEach(s => skillVals[s]=0);
+  Object.entries(p.skills).forEach(([s,v]) => { if(s in skillVals) skillVals[s]=v; });
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', b.dataset.key===key));
+  refreshStatsUI(); renderSkillList(); refreshSummaryChips(); refreshSkillTotals();
+}
+
+function clampStat(field,newVal){
+  newVal=Math.max(10,Math.min(125,newVal));
+  const others=(field==='str'?stats.dex+stats.int:field==='dex'?stats.str+stats.int:stats.str+stats.dex);
+  const maxAllowed=STAT_CAP-others;
+  if(newVal>maxAllowed) newVal=Math.max(10,maxAllowed);
+  return newVal;
+}
+function onStatInput(field,value){
+  stats[field]=clampStat(field, parseInt(value,10)||10);
+  refreshStatsUI();
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+}
+strRange.addEventListener('input', e => onStatInput('str', e.target.value));
+dexRange.addEventListener('input', e => onStatInput('dex', e.target.value));
+intRange.addEventListener('input', e => onStatInput('int', e.target.value));
+
+function refreshStatsUI(){
+  strRange.value=stats.str; dexRange.value=stats.dex; intRange.value=stats.int;
+  strVal.textContent=stats.str; dexVal.textContent=stats.dex; intVal.textContent=stats.int;
+  const total=stats.str+stats.dex+stats.int, remaining=STAT_CAP-total;
+  statBarFill.style.width=Math.min(100,(total/STAT_CAP*100))+'%';
+  statMsg.textContent = remaining>0 ? `Restam ${remaining} pontos de atributo.` : 'Todos os pontos de atributo foram usados.';
+  statGemNum.textContent=remaining;
+  statGem.classList.toggle('empty', remaining===0);
+}
+
+function totalSkillPoints(){ return Object.values(skillVals).reduce((a,b)=>a+b,0); }
+function clampSkill(name,newVal){
+  newVal=Math.max(0,Math.min(100,newVal));
+  const others=totalSkillPoints()-skillVals[name];
+  const maxAllowed=SKILL_CAP-others;
+  if(newVal>maxAllowed) newVal=Math.max(0,maxAllowed);
+  return newVal;
+}
+function onSkillInput(name,value){
+  skillVals[name]=clampSkill(name, parseFloat(value)||0);
+  refreshSkillRow(name); refreshSkillTotals(); refreshSummaryChips();
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+}
+function refreshSkillRow(name){
+  const row=document.getElementById('skillrow-'+slug(name));
+  if(!row) return;
+  const v=skillVals[name];
+  row.querySelector('input[type=range]').value=v;
+  row.querySelector('.v').textContent=v;
+}
+function refreshSkillTotals(){
+  const total=totalSkillPoints(), remaining=SKILL_CAP-total;
+  skillBarFill.style.width=Math.min(100,(total/SKILL_CAP*100))+'%';
+  skillMsg.textContent = remaining>0 ? `Restam ${remaining} pontos de perícia.` : 'Todos os pontos de perícia foram usados.';
+  skillGemNum.textContent=remaining;
+  skillGem.classList.toggle('empty', remaining===0);
+}
+function slug(name){ return name.toLowerCase().replace(/[^a-z0-9]+/g,'-'); }
+
+function renderSkillList(){
+  skillList.innerHTML='';
+  let names;
+  if(searchTerm){
+    names = ALL_SKILLS.filter(n => n.toLowerCase().includes(searchTerm));
+  } else {
+    names = SKILL_CATEGORIES.find(c => c.key===activeTab).skills;
+  }
+  if(names.length===0){
+    skillList.innerHTML='<div class="no-results">Nenhuma perícia encontrada.</div>';
+    return;
+  }
+  names.forEach(name => {
+    const row=document.createElement('div');
+    row.className='skill-row';
+    row.id='skillrow-'+slug(name);
+    const showCat = !!searchTerm;
+    row.innerHTML = `
+      <div class="name">${name}${showCat ? `<small>${categoryOf(name)}</small>` : ''}</div>
+      <input type="range" min="0" max="100" value="${skillVals[name]}">
+      <div class="v mono">${skillVals[name]}</div>
+    `;
+    row.querySelector('input[type=range]').addEventListener('input', e => onSkillInput(name, e.target.value));
+    skillList.appendChild(row);
+  });
+}
+
+function refreshSummaryChips(){
+  const used = ALL_SKILLS.filter(s => skillVals[s]>0).sort((a,b)=>skillVals[b]-skillVals[a]);
+  if(used.length===0){
+    summaryChips.innerHTML='<span class="empty-hint">Nenhuma perícia selecionada ainda — escolha uma build ou ajuste abaixo.</span>';
+    return;
+  }
+  summaryChips.innerHTML='';
+  used.forEach(name => {
+    const chip=document.createElement('div');
+    chip.className='chip';
+    chip.innerHTML = `${name} <span class="n mono">${skillVals[name]}</span> <button title="Zerar">×</button>`;
+    chip.querySelector('button').addEventListener('click', () => {
+      skillVals[name]=0;
+      refreshSkillRow(name); refreshSkillTotals(); refreshSummaryChips();
+    });
+    summaryChips.appendChild(chip);
+  });
+}
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  stats={str:10,dex:10,int:10};
+  ALL_SKILLS.forEach(s => skillVals[s]=0);
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  refreshStatsUI(); renderSkillList(); refreshSummaryChips(); refreshSkillTotals();
+});
+
+document.getElementById('copyBtn').addEventListener('click', async () => {
+  const lines=[];
+  lines.push('=== Build Ultima Online ===');
+  lines.push(`STR ${stats.str} / DEX ${stats.dex} / INT ${stats.int}  (total ${stats.str+stats.dex+stats.int}/${STAT_CAP})`);
+  lines.push('');
+  ALL_SKILLS.filter(s => skillVals[s]>0).forEach(s => lines.push(`${s}: ${skillVals[s]}`));
+  lines.push('');
+  lines.push(`Total de perícias: ${totalSkillPoints()}/${SKILL_CAP}`);
+  const text=lines.join('\n');
+  try{ await navigator.clipboard.writeText(text); flashMsg('saveMsg','Build copiado para a área de transferência.'); }
+  catch(err){ flashMsg('saveMsg','Não foi possível copiar automaticamente — selecione o texto manualmente.'); }
+});
+
+function flashMsg(id,text){
+  const el=document.getElementById(id);
+  el.textContent=text;
+  setTimeout(() => { if(el.textContent===text) el.textContent=''; }, 3500);
+}
+
+const savedListEl=document.getElementById('savedList');
+async function refreshSavedList(){
+  savedListEl.innerHTML='<p class="status-msg">Carregando builds salvos…</p>';
+  try{
+    const res=await window.storage.list('uo-build:', false);
+    const keys=(res && res.keys) ? res.keys : [];
+    if(keys.length===0){ savedListEl.innerHTML='<p class="status-msg">Nenhum build salvo ainda.</p>'; return; }
+    savedListEl.innerHTML='';
+    for(const key of keys){
+      const name=key.replace('uo-build:','');
+      const item=document.createElement('div');
+      item.className='saved-item';
+      item.innerHTML=`<span>${name}</span><span><button class="load">Carregar</button><button class="del">Excluir</button></span>`;
+      item.querySelector('.load').addEventListener('click', () => loadBuild(key));
+      item.querySelector('.del').addEventListener('click', () => deleteBuild(key));
+      savedListEl.appendChild(item);
+    }
+  }catch(err){ savedListEl.innerHTML='<p class="status-msg">Não foi possível carregar a lista de builds.</p>'; }
+}
+
+document.getElementById('saveBtn').addEventListener('click', async () => {
+  const nameInput=document.getElementById('buildName');
+  const name=nameInput.value.trim();
+  if(!name){ flashMsg('saveMsg','Digite um nome para o build antes de salvar.'); return; }
+  const key='uo-build:'+name;
+  const payload=JSON.stringify({ stats:{...stats}, skills:{...skillVals}, savedAt:new Date().toISOString() });
+  try{
+    const result=await window.storage.set(key,payload,false);
+    if(result){ flashMsg('saveMsg',`Build "${name}" salvo.`); nameInput.value=''; refreshSavedList(); }
+    else{ flashMsg('saveMsg','Falha ao salvar o build.'); }
+  }catch(err){ flashMsg('saveMsg','Erro ao salvar o build.'); }
+});
+
+async function loadBuild(key){
+  try{
+    const res=await window.storage.get(key,false);
+    if(!res){ flashMsg('saveMsg','Build não encontrado.'); return; }
+    const data=JSON.parse(res.value);
+    stats={ str:data.stats.str, dex:data.stats.dex, int:data.stats.int };
+    ALL_SKILLS.forEach(s => skillVals[s]=0);
+    Object.entries(data.skills||{}).forEach(([s,v]) => { if(s in skillVals) skillVals[s]=v; });
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    refreshStatsUI(); renderSkillList(); refreshSummaryChips(); refreshSkillTotals();
+    flashMsg('saveMsg','Build carregado.');
+  }catch(err){ flashMsg('saveMsg','Erro ao carregar o build.'); }
+}
+async function deleteBuild(key){
+  try{ await window.storage.delete(key,false); flashMsg('saveMsg','Build excluído.'); refreshSavedList(); }
+  catch(err){ flashMsg('saveMsg','Erro ao excluir o build.'); }
+}
+
+refreshStatsUI();
+renderSkillList();
+refreshSummaryChips();
+refreshSkillTotals();
+refreshSavedList();
+</script>
+</body>
+</html>
