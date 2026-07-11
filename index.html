@@ -222,13 +222,16 @@
 
   .skill-list{ display:flex; flex-direction:column; gap:2px; }
   .skill-row{
-    display:grid; grid-template-columns: 1fr 90px 46px; gap:12px; align-items:center;
-    padding: 9px 12px; border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
     border-radius: var(--r-sm);
   }
   .skill-row:hover{ background: rgba(255,255,255,.02); }
-  .skill-row .name{ font-size:14px; }
-  .skill-row .name small{ display:block; font-size:11px; color: var(--text-dim); font-weight:400; }
+  .skill-row-main{
+    display:grid; grid-template-columns: 1fr 90px 46px; gap:12px; align-items:center;
+    padding: 9px 12px;
+  }
+  .skill-row .name{ font-size:14px; display:flex; align-items:center; flex-wrap:wrap; }
+  .skill-row .name small{ display:block; width:100%; font-size:11px; color: var(--text-dim); font-weight:400; }
   .skill-row input[type=range]{ accent-color: var(--gold); height:14px; }
   .skill-row input.v{
     width:100%; text-align:right; color: var(--gold-bright); font-size:13.5px;
@@ -240,6 +243,30 @@
   .skill-row input.v::-webkit-outer-spin-button, .skill-row input.v::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
   .skill-row input.v[type=number]{ -moz-appearance:textfield; }
   .no-results{ padding: 20px; text-align:center; color: var(--text-dim); font-size:13.5px; }
+
+  /* ---------------- SKILL INFO ---------------- */
+  .info-btn{
+    border:none; background: rgba(224,178,58,.12); color: var(--gold);
+    width:19px; height:19px; border-radius:50%; margin-left:7px;
+    font-size:12px; line-height:1; cursor:pointer; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .info-btn:hover{ background: var(--gold); color:#1a1305; }
+  .skill-row.expanded .info-btn{ background: var(--gold); color:#1a1305; }
+  .skill-detail{
+    display:none; padding: 2px 14px 14px 14px; font-size:12.5px; line-height:1.5; color: var(--text-dim);
+  }
+  .skill-row.expanded .skill-detail{ display:block; }
+  .skill-detail .def{ color: var(--text); margin:0 0 6px; }
+  .skill-detail .benefit{ margin:0; color: var(--teal); }
+  .skill-detail .benefit b{ color: var(--gold-bright); }
+  .shard-disclaimer{
+    display:flex; gap:8px; align-items:flex-start;
+    font-size:12px; color: var(--text-dim); background: rgba(224,178,58,.06);
+    border:1px solid var(--gold-dim); border-radius: var(--r-md);
+    padding:10px 14px; margin-bottom:16px;
+  }
+  .shard-disclaimer .ic{ color: var(--gold); flex-shrink:0; }
 
   /* ---------------- SYNERGY ---------------- */
   .skill-row.synergy{
@@ -380,6 +407,11 @@
       <div class="bigbar" style="margin-bottom:6px;"><div id="skillBarFill" style="width:0%; background: linear-gradient(90deg, var(--gold-dim), var(--gold));"></div></div>
       <p class="status-msg" id="skillMsg" style="margin-bottom:16px;">750 skill points remaining.</p>
 
+      <div class="shard-disclaimer">
+        <span class="ic">ⓘ</span>
+        <span data-i18n="shardDisclaimer">Descriptions and synergies below follow standard Ultima Online (OSI) mechanics as a general reference. Your shard may implement things differently, rebalance bonuses, or not use certain skills at all — for example, Ninjitsu isn't used on some shards, such as Aurora. Always check your shard's own rules.</span>
+      </div>
+
       <div class="skills-top">
         <div class="search-box">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -433,6 +465,7 @@ const I18N = {
     copyTitle:'=== Build Ultima Online ===', copyStatsLine:'total {t}/{cap}', copyTotalSkills:'Total de perícias: {t}/{cap}',
     footer:'Ferramenta não-oficial de planejamento — Ultima Online é marca da Broadsword/EA. Os limites são totalmente configuráveis no painel de Configurações.',
     relatedLabel:'Perícias Relacionadas (sugestões)', relatedTo:'Relacionado a: {list}', viaLabel:'via {trigger}',
+    shardDisclaimer:'As descrições e sinergias abaixo seguem as mecânicas padrão da Ultima Online (OSI) como referência geral. Seu shard pode implementar as coisas de forma diferente, rebalancear bônus ou nem usar certas perícias — por exemplo, Ninjitsu não é usada em alguns shards, como o Aurora. Sempre confira as regras específicas do seu shard.',
     catAnimal:'Animais', catBardic:'Bardo', catCombat:'Combate', catMagic:'Magia', catCrafting:'Ofícios', catGathering:'Coleta & Saber', catStealth:'Furtividade', catMisc:'Diversos',
     presetTamer:'Tamer (Mago)', presetMiner:'Minerador/Ferreiro', presetWorker:'Full Worker', presetMageWarrior:'Mago Guerreiro', presetStealthArcher:'Arqueiro Furtivo', presetBard:'Bardo Provo/Paz', presetThief:'Ladrão', presetDexxer:'Dexxer PvP',
   },
@@ -458,6 +491,7 @@ const I18N = {
     copyTitle:'=== Ultima Online Build ===', copyStatsLine:'total {t}/{cap}', copyTotalSkills:'Total skill points: {t}/{cap}',
     footer:'Unofficial planning tool — Ultima Online is a trademark of Broadsword/EA. Caps are fully configurable in the Shard Settings panel.',
     relatedLabel:'Related Skills (suggestions)', relatedTo:'Related to: {list}', viaLabel:'via {trigger}',
+    shardDisclaimer:'Descriptions and synergies below follow standard Ultima Online (OSI) mechanics as a general reference. Your shard may implement things differently, rebalance bonuses, or not use certain skills at all — for example, Ninjitsu isn\'t used on some shards, such as Aurora. Always check your shard\'s own rules.',
     catAnimal:'Animals', catBardic:'Bardic', catCombat:'Combat', catMagic:'Magic', catCrafting:'Crafting', catGathering:'Gathering & Lore', catStealth:'Stealth', catMisc:'Misc',
     presetTamer:'Tamer (Mage)', presetMiner:'Miner/Blacksmith', presetWorker:'Full Worker', presetMageWarrior:'Battle Mage', presetStealthArcher:'Stealth Archer', presetBard:'Bard (Provo/Peace)', presetThief:'Thief', presetDexxer:'PvP Dexxer',
   }
@@ -549,6 +583,132 @@ const SKILL_SYNERGIES = {
   'Poisoning': ['Stealing','Fencing','Taste Identification'],
   // Misc
   'Begging': ['Stealing'],
+};
+
+// Short factual description + practical synergy benefit per skill, PT/EN.
+// General OSI-style reference — see the in-app disclaimer about shard variance.
+const SKILL_INFO = {
+  'Animal Taming': { pt:{def:'Habilidade de domar animais e criaturas selvagens, transformando-as em pets leais e controláveis.', benefit:'Combinada com <b>Animal Lore</b> (avalia o pet) e <b>Veterinary</b> (cura o pet), forma a base de qualquer build de Tamer.'},
+    en:{def:'Ability to tame wild animals and creatures, turning them into loyal, controllable pets.', benefit:'Paired with <b>Animal Lore</b> (evaluates the pet) and <b>Veterinary</b> (heals the pet), it forms the core of any Tamer build.'} },
+  'Animal Lore': { pt:{def:'Revela atributos, resistências e status de animais e pets.', benefit:'Essencial para domar (mostra a chance de sucesso) e para cuidar de pets junto com <b>Veterinary</b>.'},
+    en:{def:'Reveals attributes, resistances and status of animals and pets.', benefit:'Essential for taming (shows success chance) and for caring for pets alongside <b>Veterinary</b>.'} },
+  'Veterinary': { pt:{def:'Cura pets feridos ou os ressuscita quando caem em combate.', benefit:'Indispensável para quem tem <b>Animal Taming</b>, mantém o pet vivo em lutas longas.'},
+    en:{def:'Heals injured pets or resurrects them when they fall in combat.', benefit:'Essential for anyone with <b>Animal Taming</b>, keeps the pet alive through long fights.'} },
+  'Herding': { pt:{def:'Permite guiar e agrupar animais (como ovelhas) sem precisar domá-los.', benefit:'Skill de suporte com pouca sinergia direta de combate; útil para pastorear rebanhos junto de <b>Animal Taming</b>.'},
+    en:{def:'Lets you guide and herd animals (like sheep) without taming them.', benefit:'A support skill with little direct combat synergy; useful for herding livestock alongside <b>Animal Taming</b>.'} },
+
+  'Musicianship': { pt:{def:'Habilidade de tocar instrumentos musicais; base de todas as perícias de bardo.', benefit:'Obrigatória para usar <b>Provocation</b>, <b>Peacemaking</b> e <b>Discordance</b> — quanto maior, mais eficazes esses efeitos.'},
+    en:{def:'Ability to play musical instruments; the base skill for all bard abilities.', benefit:'Required to use <b>Provocation</b>, <b>Peacemaking</b> and <b>Discordance</b> — the higher it is, the more effective those effects.'} },
+  'Discordance': { pt:{def:'Toca uma música que enfraquece um inimigo, reduzindo seus atributos e dano.', benefit:'Combinada com <b>Tactics</b> e uma perícia de arma, enfraquece o alvo antes do confronto direto.'},
+    en:{def:'Plays a tune that weakens an enemy, lowering its stats and damage.', benefit:'Paired with <b>Tactics</b> and a weapon skill, it weakens the target before direct combat.'} },
+  'Peacemaking': { pt:{def:'Acalma criaturas e NPCs hostis, interrompendo combates.', benefit:'Boa para escapar de brigas ou proteger um grupo; depende de <b>Musicianship</b>.'},
+    en:{def:'Calms hostile creatures and NPCs, breaking off combat.', benefit:'Good for escaping fights or protecting a group; depends on <b>Musicianship</b>.'} },
+  'Provocation': { pt:{def:'Incita duas criaturas a lutarem entre si.', benefit:'Combinada com <b>Musicianship</b>, permite jogar monstros uns contra os outros sem arriscar o personagem.'},
+    en:{def:'Incites two creatures to fight each other.', benefit:'Paired with <b>Musicianship</b>, it turns monsters against each other without risking your own character.'} },
+
+  'Archery': { pt:{def:'Combate à distância com arcos e bestas.', benefit:'Junto de <b>Tactics</b> e <b>Anatomy</b>, aumenta o dano e a precisão dos disparos.'},
+    en:{def:'Ranged combat with bows and crossbows.', benefit:'With <b>Tactics</b> and <b>Anatomy</b>, it increases shot damage and accuracy.'} },
+  'Fencing': { pt:{def:'Combate com armas perfurantes (adagas, espadas finas, lanças).', benefit:'Com <b>Tactics</b>/<b>Anatomy</b> aumenta o dano; com <b>Poisoning</b> permite envenenar a lâmina.'},
+    en:{def:'Combat with piercing weapons (daggers, rapiers, spears).', benefit:'With <b>Tactics</b>/<b>Anatomy</b> it boosts damage; with <b>Poisoning</b> you can envenom the blade.'} },
+  'Mace Fighting': { pt:{def:'Combate com armas de concussão (maças, martelos, cajados).', benefit:'Com <b>Tactics</b>/<b>Anatomy</b> aumenta dano e a chance de atordoar o alvo.'},
+    en:{def:'Combat with blunt weapons (maces, hammers, staves).', benefit:'With <b>Tactics</b>/<b>Anatomy</b> it boosts damage and the chance to stun the target.'} },
+  'Parrying': { pt:{def:'Usa um escudo ou arma para bloquear ataques inimigos.', benefit:'Reduz o dano recebido; com <b>Bushido</b> permite parry mesmo empunhando armas de duas mãos.'},
+    en:{def:'Uses a shield or weapon to block incoming attacks.', benefit:'Reduces damage taken; with <b>Bushido</b> you can parry even while wielding two-handed weapons.'} },
+  'Swordsmanship': { pt:{def:'Combate com espadas e lâminas de corte.', benefit:'Com <b>Tactics</b>/<b>Anatomy</b> aumenta o dano corpo-a-corpo.'},
+    en:{def:'Combat with swords and slashing blades.', benefit:'With <b>Tactics</b>/<b>Anatomy</b> it increases melee damage.'} },
+  'Tactics': { pt:{def:'Melhora o dano geral em combate corpo-a-corpo e à distância.', benefit:'Base de qualquer build guerreiro — combina com toda perícia de arma e com <b>Anatomy</b> para dano ainda maior.'},
+    en:{def:'Improves overall damage in melee and ranged combat.', benefit:'The backbone of any warrior build — pairs with every weapon skill and with <b>Anatomy</b> for even more damage.'} },
+  'Throwing': { pt:{def:'Combate com armas de arremesso.', benefit:'Com <b>Tactics</b>/<b>Anatomy</b> aumenta o dano dos arremessos.'},
+    en:{def:'Combat with thrown weapons.', benefit:'With <b>Tactics</b>/<b>Anatomy</b> it increases thrown-weapon damage.'} },
+  'Wrestling': { pt:{def:'Combate desarmado (soco, chute, agarrão).', benefit:'Junto de <b>Tactics</b>/<b>Anatomy</b> melhora o dano; comum em builds de <b>Ninjitsu</b> por permitir lutar sem largar itens de furtividade.'},
+    en:{def:'Unarmed combat (punches, kicks, grapples).', benefit:'With <b>Tactics</b>/<b>Anatomy</b> it improves damage; common in <b>Ninjitsu</b> builds since it lets you fight without dropping stealth items.'} },
+  'Anatomy': { pt:{def:'Conhecimento do corpo de criaturas e humanos.', benefit:'Combinada com perícias de combate (<b>Swordsmanship</b>, <b>Mace Fighting</b>, <b>Archery</b> etc.), aumenta o dano corpo-a-corpo e a chance de acertar pontos vitais. Também ajuda a estimar a vida restante de um alvo e potencializa a cura com <b>Healing</b>.'},
+    en:{def:'Knowledge of creature and human anatomy.', benefit:'Combined with combat skills (<b>Swordsmanship</b>, <b>Mace Fighting</b>, <b>Archery</b>, etc.), it increases melee damage and the chance to strike vital points. It also helps gauge a target\'s remaining health and boosts healing with <b>Healing</b>.'} },
+  'Healing': { pt:{def:'Usa bandagens para curar ferimentos e reanimar aliados.', benefit:'Combinada com <b>Anatomy</b>, cura mais rápido e mais pontos de vida por bandagem.'},
+    en:{def:'Uses bandages to heal wounds and revive allies.', benefit:'Paired with <b>Anatomy</b>, it heals faster and for more hit points per bandage.'} },
+  'Resisting Spells': { pt:{def:'Reduz a eficácia de magias lançadas contra o personagem.', benefit:'Essencial contra <b>Magery</b> inimiga; comum em builds PvP para resistir a debuffs e dano mágico.'},
+    en:{def:'Reduces the effectiveness of spells cast against the character.', benefit:'Essential against enemy <b>Magery</b>; common in PvP builds to resist debuffs and magic damage.'} },
+
+  'Magery': { pt:{def:'Permite lançar magias das oito escolas tradicionais de magia.', benefit:'Com <b>Evaluate Intelligence</b> aumenta o dano dos feitiços, e com <b>Meditation</b> recupera mana mais rápido.'},
+    en:{def:'Lets you cast spells from the eight traditional schools of magic.', benefit:'With <b>Evaluate Intelligence</b> it boosts spell damage, and with <b>Meditation</b> mana regenerates faster.'} },
+  'Evaluate Intelligence': { pt:{def:'Avalia o poder mágico e potencializa o dano das próprias magias.', benefit:'Combina diretamente com <b>Magery</b>, aumentando o dano de feitiços ofensivos.'},
+    en:{def:'Assesses magical power and boosts the caster\'s own spell damage.', benefit:'Pairs directly with <b>Magery</b>, increasing offensive spell damage.'} },
+  'Meditation': { pt:{def:'Permite recuperar mana mais rápido enquanto parado.', benefit:'Fundamental para qualquer conjurador (<b>Magery</b>, <b>Mysticism</b>, <b>Spellweaving</b>) manter o ritmo de magias.'},
+    en:{def:'Lets you regenerate mana faster while standing still.', benefit:'Essential for any caster (<b>Magery</b>, <b>Mysticism</b>, <b>Spellweaving</b>) to keep casting at a good pace.'} },
+  'Focus': { pt:{def:'Aumenta a regeneração de stamina e potencializa golpes especiais de animais de estimação.', benefit:'Com <b>Meditation</b> e <b>Animal Taming</b>, mantém tanto o personagem quanto o pet com recursos plenos.'},
+    en:{def:'Increases stamina regeneration and boosts pet special-move effectiveness.', benefit:'With <b>Meditation</b> and <b>Animal Taming</b>, it keeps both the character and the pet topped up on resources.'} },
+  'Chivalry': { pt:{def:'Magias de paladino movidas a karma em vez de mana.', benefit:'Combina bem com perícias de arma e <b>Tactics</b>, dando um mago-guerreiro sustentável sem gastar mana.'},
+    en:{def:'Paladin spells powered by karma instead of mana.', benefit:'Pairs well with weapon skills and <b>Tactics</b>, giving a sustainable warrior-caster hybrid without spending mana.'} },
+  'Necromancy': { pt:{def:'Magias sombrias que drenam vida e invocam mortos-vivos.', benefit:'Junto de <b>Spirit Speak</b> (fonte de mana) forma a base de qualquer necromante.'},
+    en:{def:'Dark spells that drain life and summon the undead.', benefit:'Paired with <b>Spirit Speak</b> (its mana source), it forms the core of any necromancer.'} },
+  'Spellweaving': { pt:{def:'Magia feita ao "tecer" foco arcano junto à natureza.', benefit:'Como qualquer outra escola de magia, usa <b>Meditation</b> e <b>Evaluate Intelligence</b> para sustentar o cast.'},
+    en:{def:'Magic performed by "weaving" arcane focus with nature.', benefit:'Like any other magic school, it relies on <b>Meditation</b> and <b>Evaluate Intelligence</b> to sustain casting.'} },
+  'Spirit Speak': { pt:{def:'Permite se comunicar com espíritos; é a fonte de mana da Necromancy.', benefit:'Obrigatória para qualquer necromante conjurar magias sombrias continuamente.'},
+    en:{def:'Lets you commune with spirits; it is Necromancy\'s mana source.', benefit:'Required for any necromancer to cast dark spells continuously.'} },
+  'Mysticism': { pt:{def:'Escola de magia que mistura efeitos arcanos e curativos.', benefit:'Usa <b>Focus</b> e <b>Meditation</b> para sustentar o cast contínuo de feitiços.'},
+    en:{def:'A magic school blending arcane and healing effects.', benefit:'Relies on <b>Focus</b> and <b>Meditation</b> to sustain continuous spellcasting.'} },
+  'Bushido': { pt:{def:'Estilo de combate samurai que aumenta dano e permite bloquear com armas de duas mãos.', benefit:'Combina com <b>Parrying</b> e perícias de arma, sendo a base de builds de Samurai.'},
+    en:{def:'Samurai fighting style that boosts damage and allows blocking with two-handed weapons.', benefit:'Pairs with <b>Parrying</b> and weapon skills, forming the core of Samurai builds.'} },
+  'Ninjitsu': { pt:{def:'Técnicas ninja de furtividade, camuflagem e golpes especiais.', benefit:'Combina com <b>Hiding</b>/<b>Stealth</b> para ataques surpresa e com perícias de arma para golpes especiais únicos.'},
+    en:{def:'Ninja techniques for stealth, camouflage and special moves.', benefit:'Pairs with <b>Hiding</b>/<b>Stealth</b> for surprise attacks and with weapon skills for unique special moves.'} },
+  'Imbuing': { pt:{def:'Permite adicionar propriedades mágicas a itens sem depender de itens raros de sorte.', benefit:'Usa materiais e conhecimento de <b>Arms Lore</b>, <b>Tinkering</b>, <b>Alchemy</b> e <b>Mysticism</b> para desbloquear propriedades melhores.'},
+    en:{def:'Lets you add magical properties to items without relying on rare loot drops.', benefit:'Draws on materials and knowledge from <b>Arms Lore</b>, <b>Tinkering</b>, <b>Alchemy</b> and <b>Mysticism</b> to unlock better properties.'} },
+
+  'Alchemy': { pt:{def:'Fabricação de poções (cura, força, invisibilidade, veneno, etc.).', benefit:'Combina com <b>Item Identification</b> para reconhecer poções e com <b>Poisoning</b> para criar venenos mais fortes.'},
+    en:{def:'Crafting potions (healing, strength, invisibility, poison, etc.).', benefit:'Pairs with <b>Item Identification</b> to recognize potions and with <b>Poisoning</b> to brew stronger poisons.'} },
+  'Blacksmithy': { pt:{def:'Fabricação de armaduras e armas de metal.', benefit:'Depende de <b>Mining</b> para matéria-prima e de <b>Arms Lore</b> para avaliar a qualidade dos itens forjados.'},
+    en:{def:'Crafting metal armor and weapons.', benefit:'Depends on <b>Mining</b> for raw materials and on <b>Arms Lore</b> to assess the quality of forged items.'} },
+  'Bowcraft/Fletching': { pt:{def:'Fabricação de arcos, bestas e flechas.', benefit:'Depende de <b>Lumberjacking</b> para madeira e combina com <b>Arms Lore</b> para avaliar os itens.'},
+    en:{def:'Crafting bows, crossbows and arrows.', benefit:'Depends on <b>Lumberjacking</b> for wood and pairs with <b>Arms Lore</b> to assess the crafted items.'} },
+  'Carpentry': { pt:{def:'Fabricação de móveis, barcos e itens de madeira.', benefit:'Depende de <b>Lumberjacking</b> para matéria-prima; complementa <b>Bowcraft/Fletching</b>.'},
+    en:{def:'Crafting furniture, boats and wooden items.', benefit:'Depends on <b>Lumberjacking</b> for raw materials; complements <b>Bowcraft/Fletching</b>.'} },
+  'Cartography': { pt:{def:'Criação de mapas de tesouro e navegação.', benefit:'Combina com <b>Item Identification</b> para avaliar mapas encontrados.'},
+    en:{def:'Creating treasure and navigation maps.', benefit:'Pairs with <b>Item Identification</b> to assess maps you find.'} },
+  'Cooking': { pt:{def:'Preparo de comidas que restauram fome e ajudam levemente na stamina.', benefit:'Combina com <b>Camping</b> (fogueira) e <b>Taste Identification</b> (detectar veneno na comida).'},
+    en:{def:'Preparing food that restores hunger and slightly helps stamina.', benefit:'Pairs with <b>Camping</b> (campfire) and <b>Taste Identification</b> (detecting poisoned food).'} },
+  'Inscription': { pt:{def:'Criação de pergaminhos mágicos e itens encantados com runas.', benefit:'Depende do conhecimento de <b>Magery</b>/<b>Evaluate Intelligence</b> para reproduzir feitiços em pergaminho.'},
+    en:{def:'Crafting magic scrolls and rune-enchanted items.', benefit:'Depends on <b>Magery</b>/<b>Evaluate Intelligence</b> knowledge to reproduce spells onto scrolls.'} },
+  'Tailoring': { pt:{def:'Fabricação de roupas e armaduras de couro/tecido.', benefit:'Combina com <b>Arms Lore</b> para avaliar os itens produzidos e às vezes com <b>Blacksmithy</b> em builds híbridas de crafter.'},
+    en:{def:'Crafting cloth and leather clothing/armor.', benefit:'Pairs with <b>Arms Lore</b> to assess crafted items, and sometimes with <b>Blacksmithy</b> in hybrid crafter builds.'} },
+  'Tinkering': { pt:{def:'Fabricação de ferramentas, engrenagens e itens mecânicos.', benefit:'Depende de <b>Mining</b> para matéria-prima e complementa <b>Blacksmithy</b> e <b>Imbuing</b>.'},
+    en:{def:'Crafting tools, gears and mechanical items.', benefit:'Depends on <b>Mining</b> for raw materials and complements <b>Blacksmithy</b> and <b>Imbuing</b>.'} },
+
+  'Mining': { pt:{def:'Extração de minérios das rochas para fundir em lingotes.', benefit:'Matéria-prima essencial para <b>Blacksmithy</b> e <b>Tinkering</b>.'},
+    en:{def:'Extracting ore from rocks to smelt into ingots.', benefit:'Essential raw material for <b>Blacksmithy</b> and <b>Tinkering</b>.'} },
+  'Lumberjacking': { pt:{def:'Corte de árvores para extrair madeira; também dá um leve bônus de dano com armas de madeira.', benefit:'Matéria-prima essencial para <b>Carpentry</b> e <b>Bowcraft/Fletching</b>.'},
+    en:{def:'Cutting trees for wood; also gives a small damage bonus with wooden weapons.', benefit:'Essential raw material for <b>Carpentry</b> and <b>Bowcraft/Fletching</b>.'} },
+  'Fishing': { pt:{def:'Pesca de peixes e itens especiais em rios, lagos e mares.', benefit:'Fornece ingredientes para <b>Cooking</b> e ocasionalmente itens raros.'},
+    en:{def:'Fishing for fish and special items in rivers, lakes and seas.', benefit:'Supplies ingredients for <b>Cooking</b> and occasionally rare items.'} },
+  'Camping': { pt:{def:'Permite montar acampamento e criar fogueiras para descansar.', benefit:'Combina com <b>Lumberjacking</b> (lenha) e <b>Cooking</b> (preparar comida no fogo).'},
+    en:{def:'Lets you set up camp and light campfires to rest.', benefit:'Pairs with <b>Lumberjacking</b> (firewood) and <b>Cooking</b> (cooking over the fire).'} },
+  'Item Identification': { pt:{def:'Revela as propriedades mágicas e o valor de itens.', benefit:'Útil junto de <b>Mining</b>/<b>Alchemy</b> para avaliar rapidamente o que foi encontrado ou fabricado.'},
+    en:{def:'Reveals the magical properties and value of items.', benefit:'Useful alongside <b>Mining</b>/<b>Alchemy</b> to quickly assess what you\'ve found or crafted.'} },
+  'Arms Lore': { pt:{def:'Revela a qualidade e as propriedades de armas e armaduras.', benefit:'Essencial para crafters de <b>Blacksmithy</b>, <b>Tailoring</b> e <b>Bowcraft/Fletching</b> avaliarem seus próprios itens.'},
+    en:{def:'Reveals the quality and properties of weapons and armor.', benefit:'Essential for <b>Blacksmithy</b>, <b>Tailoring</b> and <b>Bowcraft/Fletching</b> crafters to assess their own items.'} },
+  'Taste Identification': { pt:{def:'Detecta veneno em comidas e bebidas.', benefit:'Combina com <b>Cooking</b> e <b>Poisoning</b> para evitar ser envenenado por comida contaminada.'},
+    en:{def:'Detects poison in food and drink.', benefit:'Pairs with <b>Cooking</b> and <b>Poisoning</b> to avoid being poisoned by tainted food.'} },
+  'Forensic Evaluation': { pt:{def:'Analisa corpos para descobrir a causa da morte e histórico de crimes.', benefit:'Útil com <b>Anatomy</b>/<b>Healing</b> para investigadores e sistemas de justiça do servidor.'},
+    en:{def:'Examines corpses to determine cause of death and crime history.', benefit:'Useful with <b>Anatomy</b>/<b>Healing</b> for investigators and server justice systems.'} },
+
+  'Hiding': { pt:{def:'Permite se esconder da visão de outros jogadores e criaturas.', benefit:'Base de qualquer build furtiva; combina com <b>Stealth</b> para se mover escondido.'},
+    en:{def:'Lets you hide from the sight of other players and creatures.', benefit:'The base of any stealth build; pairs with <b>Stealth</b> to move around unseen.'} },
+  'Stealth': { pt:{def:'Permite se mover enquanto está escondido, sem ser revelado.', benefit:'Depende de <b>Hiding</b>; combina com <b>Ninjitsu</b> para ataques surpresa devastadores.'},
+    en:{def:'Lets you move around while hidden, without being revealed.', benefit:'Depends on <b>Hiding</b>; pairs with <b>Ninjitsu</b> for devastating surprise attacks.'} },
+  'Stealing': { pt:{def:'Permite furtar itens de NPCs, monstros ou outros jogadores.', benefit:'Combina com <b>Hiding</b> (fugir sem ser visto) e <b>Snooping</b> (ver o que a vítima carrega antes de roubar).'},
+    en:{def:'Lets you steal items from NPCs, monsters or other players.', benefit:'Pairs with <b>Hiding</b> (escape unseen) and <b>Snooping</b> (see what the target carries before stealing).'} },
+  'Snooping': { pt:{def:'Permite ver o conteúdo da mochila de outro personagem sem ser notado (às vezes).', benefit:'Combina com <b>Stealing</b> para escolher o melhor item antes de furtar.'},
+    en:{def:'Lets you peek into another character\'s backpack, sometimes without being noticed.', benefit:'Pairs with <b>Stealing</b> to pick the best item before taking it.'} },
+  'Lockpicking': { pt:{def:'Abre fechaduras de baús e portas trancadas.', benefit:'Combina com <b>Remove Trap</b> (desarmar armadilhas) e <b>Detect Hidden</b> (achar baús escondidos).'},
+    en:{def:'Picks locks on chests and locked doors.', benefit:'Pairs with <b>Remove Trap</b> (disarming traps) and <b>Detect Hidden</b> (finding hidden chests).'} },
+  'Detect Hidden': { pt:{def:'Revela criaturas e jogadores escondidos ou armadilhas ocultas nas proximidades.', benefit:'Contra-ataca <b>Hiding</b> inimigo e ajuda a evitar armadilhas junto de <b>Remove Trap</b>.'},
+    en:{def:'Reveals hidden creatures/players or hidden traps nearby.', benefit:'Counters enemy <b>Hiding</b> and helps avoid traps alongside <b>Remove Trap</b>.'} },
+  'Remove Trap': { pt:{def:'Desarma armadilhas em baús e portas com segurança.', benefit:'Combina com <b>Lockpicking</b> para explorar dungeons e baús com risco reduzido.'},
+    en:{def:'Safely disarms traps on chests and doors.', benefit:'Pairs with <b>Lockpicking</b> to explore dungeons and chests with less risk.'} },
+  'Poisoning': { pt:{def:'Permite aplicar veneno em armas e ter maior resistência a venenos próprios.', benefit:'Combina com <b>Fencing</b> (envenenar a lâmina) e com <b>Stealing</b>/assassinos para ataques furtivos letais.'},
+    en:{def:'Lets you apply poison to weapons and grants resistance to your own poisons.', benefit:'Pairs with <b>Fencing</b> (envenoming the blade) and with <b>Stealing</b>/assassin builds for lethal sneak attacks.'} },
+
+  'Begging': { pt:{def:'Permite pedir esmolas e, ocasionalmente, furtar sem ser percebido enquanto mendiga.', benefit:'Skill de flavor/RP com pouca sinergia mecânica direta; às vezes usada como disfarce por ladrões (<b>Stealing</b>).'},
+    en:{def:'Lets you beg for alms and occasionally steal unnoticed while doing so.', benefit:'A flavor/RP skill with little direct mechanical synergy; sometimes used as a cover by thieves (<b>Stealing</b>).'} },
 };
 
 function categoryLabelOf(name){
@@ -749,15 +909,26 @@ function renderSkillList(){
     row.id='skillrow-'+slug(name);
     const showCat = !!searchTerm;
     const badge = triggers ? `<span class="synergy-badge" title="${t('relatedTo',{list:triggers.join(', ')})}">✦</span>` : '';
+    const info = SKILL_INFO[name] ? (SKILL_INFO[name][currentLang] || SKILL_INFO[name].en) : null;
+    const detailHtml = info ? `
+      <div class="skill-detail">
+        <p class="def">${info.def}</p>
+        <p class="benefit">${info.benefit}</p>
+      </div>` : '';
     row.innerHTML = `
-      <div class="name">${name}${badge}${showCat ? `<small>${categoryLabelOf(name)}</small>` : ''}</div>
-      <input type="range" min="0" max="${CONFIG.maxSkill}" value="${skillVals[name]}">
-      <input type="number" class="v mono" min="0" max="${CONFIG.maxSkill}" value="${skillVals[name]}">
+      <div class="skill-row-main">
+        <div class="name">${name}${info ? `<button class="info-btn" type="button" title="${currentLang==='pt'?'O que é / sinergias':'What it is / synergies'}">ⓘ</button>` : ''}${badge}${showCat ? `<small>${categoryLabelOf(name)}</small>` : ''}</div>
+        <input type="range" min="0" max="${CONFIG.maxSkill}" value="${skillVals[name]}">
+        <input type="number" class="v mono" min="0" max="${CONFIG.maxSkill}" value="${skillVals[name]}">
+      </div>
+      ${detailHtml}
     `;
     row.querySelector('input[type=range]').addEventListener('input', e => onSkillInput(name, e.target.value));
     const numInput = row.querySelector('input[type=number]');
     numInput.addEventListener('input', e => onSkillInput(name, e.target.value));
     numInput.addEventListener('blur', e => { e.target.value = skillVals[name]; });
+    const infoBtn = row.querySelector('.info-btn');
+    if(infoBtn){ infoBtn.addEventListener('click', () => row.classList.toggle('expanded')); }
     skillList.appendChild(row);
   });
 }
