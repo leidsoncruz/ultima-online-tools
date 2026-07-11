@@ -509,7 +509,7 @@ const SKILL_CATEGORIES = [
   { key:'combat', labelKey:'catCombat', skills:['Archery','Fencing','Mace Fighting','Parrying','Swordsmanship','Tactics','Throwing','Wrestling','Anatomy','Healing','Resisting Spells'] },
   { key:'magic', labelKey:'catMagic', skills:['Magery','Evaluate Intelligence','Meditation','Focus','Chivalry','Necromancy','Spellweaving','Spirit Speak','Mysticism','Bushido','Ninjitsu','Imbuing'] },
   { key:'crafting', labelKey:'catCrafting', skills:['Alchemy','Blacksmithy','Bowcraft/Fletching','Carpentry','Cartography','Cooking','Inscription','Tailoring','Tinkering'] },
-  { key:'gathering', labelKey:'catGathering', skills:['Mining','Lumberjacking','Fishing','Camping','Item Identification','Arms Lore','Taste Identification','Forensic Evaluation'] },
+  { key:'gathering', labelKey:'catGathering', skills:['Mining','Lumberjacking','Fishing','Camping','Item Identification','Arms Lore','Taste Identification','Forensic Evaluation','Tracking'] },
   { key:'stealth', labelKey:'catStealth', skills:['Hiding','Stealth','Stealing','Snooping','Lockpicking','Detect Hidden','Remove Trap','Poisoning'] },
   { key:'misc', labelKey:'catMisc', skills:['Begging'] },
 ];
@@ -519,7 +519,7 @@ const ALL_SKILLS = SKILL_CATEGORIES.flatMap(c => c.skills);
 // (bonus effects, shared build archetypes, or resource/crafting chains).
 const SKILL_SYNERGIES = {
   // Animal
-  'Animal Taming': ['Animal Lore','Veterinary','Magery'],
+  'Animal Taming': ['Animal Lore','Veterinary','Tracking'],
   'Animal Lore': ['Animal Taming','Veterinary'],
   'Veterinary': ['Animal Lore','Animal Taming','Healing'],
   'Herding': ['Animal Taming','Camping'],
@@ -572,13 +572,14 @@ const SKILL_SYNERGIES = {
   'Arms Lore': ['Blacksmithy','Tailoring','Bowcraft/Fletching'],
   'Taste Identification': ['Cooking','Poisoning'],
   'Forensic Evaluation': ['Anatomy','Healing'],
+  'Tracking': ['Animal Taming','Detect Hidden','Camping'],
   // Stealth
   'Hiding': ['Stealth','Stealing','Snooping'],
   'Stealth': ['Hiding','Ninjitsu'],
   'Stealing': ['Hiding','Snooping','Item Identification'],
   'Snooping': ['Hiding','Stealing'],
   'Lockpicking': ['Stealing','Remove Trap','Detect Hidden'],
-  'Detect Hidden': ['Hiding','Remove Trap'],
+  'Detect Hidden': ['Hiding','Remove Trap','Tracking'],
   'Remove Trap': ['Lockpicking','Detect Hidden'],
   'Poisoning': ['Stealing','Fencing','Taste Identification'],
   // Misc
@@ -588,8 +589,8 @@ const SKILL_SYNERGIES = {
 // Short factual description + practical synergy benefit per skill, PT/EN.
 // General OSI-style reference — see the in-app disclaimer about shard variance.
 const SKILL_INFO = {
-  'Animal Taming': { pt:{def:'Habilidade de domar animais e criaturas selvagens, transformando-as em pets leais e controláveis.', benefit:'Combinada com <b>Animal Lore</b> (avalia o pet) e <b>Veterinary</b> (cura o pet), forma a base de qualquer build de Tamer.'},
-    en:{def:'Ability to tame wild animals and creatures, turning them into loyal, controllable pets.', benefit:'Paired with <b>Animal Lore</b> (evaluates the pet) and <b>Veterinary</b> (heals the pet), it forms the core of any Tamer build.'} },
+  'Animal Taming': { pt:{def:'Habilidade de domar animais e criaturas selvagens, transformando-as em pets leais e controláveis.', benefit:'Combinada com <b>Animal Lore</b> (avalia o pet), <b>Veterinary</b> (cura o pet) e <b>Tracking</b> (localiza animais próximos para domar), forma a base de qualquer build de Tamer.'},
+    en:{def:'Ability to tame wild animals and creatures, turning them into loyal, controllable pets.', benefit:'Paired with <b>Animal Lore</b> (evaluates the pet), <b>Veterinary</b> (heals the pet) and <b>Tracking</b> (locates nearby animals to tame), it forms the core of any Tamer build.'} },
   'Animal Lore': { pt:{def:'Revela atributos, resistências e status de animais e pets.', benefit:'Essencial para domar (mostra a chance de sucesso) e para cuidar de pets junto com <b>Veterinary</b>.'},
     en:{def:'Reveals attributes, resistances and status of animals and pets.', benefit:'Essential for taming (shows success chance) and for caring for pets alongside <b>Veterinary</b>.'} },
   'Veterinary': { pt:{def:'Cura pets feridos ou os ressuscita quando caem em combate.', benefit:'Indispensável para quem tem <b>Animal Taming</b>, mantém o pet vivo em lutas longas.'},
@@ -689,6 +690,8 @@ const SKILL_INFO = {
     en:{def:'Detects poison in food and drink.', benefit:'Pairs with <b>Cooking</b> and <b>Poisoning</b> to avoid being poisoned by tainted food.'} },
   'Forensic Evaluation': { pt:{def:'Analisa corpos para descobrir a causa da morte e histórico de crimes.', benefit:'Útil com <b>Anatomy</b>/<b>Healing</b> para investigadores e sistemas de justiça do servidor.'},
     en:{def:'Examines corpses to determine cause of death and crime history.', benefit:'Useful with <b>Anatomy</b>/<b>Healing</b> for investigators and server justice systems.'} },
+  'Tracking': { pt:{def:'Permite rastrear a localização de animais, monstros e outros jogadores a partir de pegadas e rastros, incluindo criaturas escondidas nas proximidades.', benefit:'Essencial para <b>Animal Taming</b> (localizar animais para domar) e para quem explora dungeons, já que revela monstros escondidos por perto. Também combina com <b>Detect Hidden</b> e <b>Camping</b>.'},
+    en:{def:'Lets you track the location of animals, monsters and other players from footprints and trails, including hidden creatures nearby.', benefit:'Essential for <b>Animal Taming</b> (locating animals to tame) and for dungeon crawlers, since it reveals hidden monsters nearby. Also pairs with <b>Detect Hidden</b> and <b>Camping</b>.'} },
 
   'Hiding': { pt:{def:'Permite se esconder da visão de outros jogadores e criaturas.', benefit:'Base de qualquer build furtiva; combina com <b>Stealth</b> para se mover escondido.'},
     en:{def:'Lets you hide from the sight of other players and creatures.', benefit:'The base of any stealth build; pairs with <b>Stealth</b> to move around unseen.'} },
@@ -718,7 +721,7 @@ function categoryLabelOf(name){
 
 const PRESETS = {
   tamer: { labelKey:'presetTamer', stats:{str:55,dex:70,int:100},
-    skills:{'Animal Taming':100,'Animal Lore':100,'Veterinary':100,'Magery':100,'Meditation':100,'Focus':100,'Musicianship':100,'Discordance':50} },
+    skills:{'Animal Taming':100,'Animal Lore':100,'Veterinary':100,'Magery':100,'Meditation':100,'Focus':100,'Tracking':100,'Musicianship':50} },
   miner: { labelKey:'presetMiner', stats:{str:90,dex:50,int:85},
     skills:{'Mining':100,'Item Identification':100,'Blacksmithy':100,'Tinkering':100,'Arms Lore':100,'Lumberjacking':50,'Carpentry':100,'Camping':50} },
   worker: { labelKey:'presetWorker', stats:{str:100,dex:45,int:80},
