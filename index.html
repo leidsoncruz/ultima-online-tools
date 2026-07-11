@@ -147,6 +147,16 @@
   .bigbar > div{ height:100%; background: linear-gradient(90deg, var(--teal-dark), var(--teal)); transition:width .15s ease; border-radius: var(--r-pill); }
   .status-msg{ font-size:12px; color: var(--text-dim); min-height:16px; margin-top:6px; }
 
+  .derived-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:16px; }
+  .derived-box{
+    background: var(--bg-2); border:1px solid var(--border-bright); border-radius: var(--r-sm);
+    padding: 9px 6px; text-align:center;
+  }
+  .derived-lbl{ font-size:10px; text-transform:uppercase; letter-spacing:.07em; color: var(--text-dim); margin-bottom:4px; }
+  .derived-val{ font-size:18px; font-weight:600; color: var(--gold-bright); }
+  .derived-box.life .derived-val{ color: var(--red); }
+  .derived-box.mana .derived-val{ color: var(--teal); }
+
   /* ---------------- SETTINGS ---------------- */
   .settings-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
   .settings-row label{ font-size:13px; color: var(--text); flex:1; }
@@ -300,18 +310,33 @@
         <h2><span class="bar"></span> <span data-i18n="attributesHeader">Attributes</span> <span class="cap-hint" id="statCapHint">cap 225</span></h2>
         <div class="stat-row">
           <label><span data-i18n="strLabel">Strength (STR)</span> <span class="val mono" id="strVal">10</span></label>
-          <input type="range" id="strRange" min="10" max="205" value="10">
+          <input type="range" id="strRange" min="10" max="100" value="10">
         </div>
         <div class="stat-row">
           <label><span data-i18n="dexLabel">Dexterity (DEX)</span> <span class="val mono" id="dexVal">10</span></label>
-          <input type="range" id="dexRange" min="10" max="205" value="10">
+          <input type="range" id="dexRange" min="10" max="100" value="10">
         </div>
         <div class="stat-row">
           <label><span data-i18n="intLabel">Intelligence (INT)</span> <span class="val mono" id="intVal">10</span></label>
-          <input type="range" id="intRange" min="10" max="205" value="10">
+          <input type="range" id="intRange" min="10" max="100" value="10">
         </div>
         <div class="bigbar"><div id="statBarFill" style="width:13%"></div></div>
         <p class="status-msg" id="statMsg">195 attribute points remaining.</p>
+
+        <div class="derived-grid">
+          <div class="derived-box life">
+            <div class="derived-lbl" data-i18n="lifeLabel">Life</div>
+            <div class="derived-val mono" id="lifeVal">0</div>
+          </div>
+          <div class="derived-box mana">
+            <div class="derived-lbl" data-i18n="manaLabel">Mana</div>
+            <div class="derived-val mono" id="manaVal">0</div>
+          </div>
+          <div class="derived-box stamina">
+            <div class="derived-lbl" data-i18n="staminaLabel">Stamina</div>
+            <div class="derived-val mono" id="staminaVal">0</div>
+          </div>
+        </div>
       </div>
 
       <div class="panel">
@@ -387,6 +412,7 @@ const I18N = {
     gemStat:'Pontos de Stat', gemSkill:'Pontos de Skill',
     presetsHeader:'Builds Prontas', resetAll:'Zerar Tudo', copyBuild:'Copiar Build',
     attributesHeader:'Atributos', strLabel:'Força (STR)', dexLabel:'Destreza (DEX)', intLabel:'Inteligência (INT)',
+    lifeLabel:'Vida', manaLabel:'Mana', staminaLabel:'Stamina',
     statRemaining:'Restam {n} pontos de atributo.', statAllUsed:'Todos os pontos de atributo foram usados.',
     settingsHeader:'Configurações do Shard', statCapLabel:'Cap de Atributos', skillCapLabel:'Cap de Perícias', maxSkillLabel:'Máximo por Perícia',
     applyBtn:'Aplicar', defaultsBtn:'Padrão UO',
@@ -411,6 +437,7 @@ const I18N = {
     gemStat:'Stat Points', gemSkill:'Skill Points',
     presetsHeader:'Ready-made Builds', resetAll:'Reset All', copyBuild:'Copy Build',
     attributesHeader:'Attributes', strLabel:'Strength (STR)', dexLabel:'Dexterity (DEX)', intLabel:'Intelligence (INT)',
+    lifeLabel:'Life', manaLabel:'Mana', staminaLabel:'Stamina',
     statRemaining:'{n} attribute points remaining.', statAllUsed:'All attribute points have been used.',
     settingsHeader:'Shard Settings', statCapLabel:'Stat Cap', skillCapLabel:'Skill Cap', maxSkillLabel:'Max per Skill',
     applyBtn:'Apply', defaultsBtn:'UO Default',
@@ -554,6 +581,7 @@ let searchTerm = '';
 const strRange=document.getElementById('strRange'), dexRange=document.getElementById('dexRange'), intRange=document.getElementById('intRange');
 const strVal=document.getElementById('strVal'), dexVal=document.getElementById('dexVal'), intVal=document.getElementById('intVal');
 const statBarFill=document.getElementById('statBarFill'), statMsg=document.getElementById('statMsg');
+const lifeVal=document.getElementById('lifeVal'), manaVal=document.getElementById('manaVal'), staminaVal=document.getElementById('staminaVal');
 const statGem=document.getElementById('statGem'), statGemNum=document.getElementById('statGemNum');
 const skillBarFill=document.getElementById('skillBarFill'), skillMsg=document.getElementById('skillMsg');
 const skillGem=document.getElementById('skillGem'), skillGemNum=document.getElementById('skillGemNum');
@@ -641,6 +669,14 @@ function refreshStatsUI(){
   statGemNum.textContent=remaining;
   statGem.classList.toggle('empty', remaining===0);
   statCapHint.textContent = t('capHintStat',{cap:CONFIG.statCap});
+
+  // Derived resources
+  const life = Math.floor((stats.str + stats.dex + stats.int) / 2.25);
+  const mana = Math.floor((stats.int * 3 + stats.str) / 4);
+  const stamina = Math.floor((stats.dex * 3 + stats.str) / 4);
+  lifeVal.textContent = life;
+  manaVal.textContent = mana;
+  staminaVal.textContent = stamina;
 }
 
 // ---------------- SKILL LOGIC ----------------
