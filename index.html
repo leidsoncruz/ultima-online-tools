@@ -310,15 +310,15 @@
         <h2><span class="bar"></span> <span data-i18n="attributesHeader">Attributes</span> <span class="cap-hint" id="statCapHint">cap 225</span></h2>
         <div class="stat-row">
           <label><span data-i18n="strLabel">Strength (STR)</span> <span class="val mono" id="strVal">10</span></label>
-          <input type="range" id="strRange" min="10" max="100" value="10">
+          <input type="range" id="strRange" min="10" max="205" value="10">
         </div>
         <div class="stat-row">
           <label><span data-i18n="dexLabel">Dexterity (DEX)</span> <span class="val mono" id="dexVal">10</span></label>
-          <input type="range" id="dexRange" min="10" max="100" value="10">
+          <input type="range" id="dexRange" min="10" max="205" value="10">
         </div>
         <div class="stat-row">
           <label><span data-i18n="intLabel">Intelligence (INT)</span> <span class="val mono" id="intVal">10</span></label>
-          <input type="range" id="intRange" min="10" max="100" value="10">
+          <input type="range" id="intRange" min="10" max="205" value="10">
         </div>
         <div class="bigbar"><div id="statBarFill" style="width:13%"></div></div>
         <p class="status-msg" id="statMsg">195 attribute points remaining.</p>
@@ -348,6 +348,10 @@
         <div class="settings-row">
           <label data-i18n="skillCapLabel">Skill Cap</label>
           <input type="number" id="cfgSkillCap" min="50" max="10000" value="750">
+        </div>
+        <div class="settings-row">
+          <label data-i18n="maxStatLabel">Max per Attribute</label>
+          <input type="number" id="cfgMaxStat" min="10" max="1000" value="100">
         </div>
         <div class="settings-row">
           <label data-i18n="maxSkillLabel">Max per Skill</label>
@@ -400,8 +404,8 @@
 
 <script>
 // ---------------- CONFIG ----------------
-let CONFIG = { statCap: 225, skillCap: 750, maxSkill: 100 };
-const DEFAULT_CONFIG = { statCap: 225, skillCap: 750, maxSkill: 100 };
+let CONFIG = { statCap: 225, skillCap: 750, maxSkill: 100, maxStat: 100 };
+const DEFAULT_CONFIG = { statCap: 225, skillCap: 750, maxSkill: 100, maxStat: 100 };
 const STAT_MIN = 10;
 
 // ---------------- I18N ----------------
@@ -414,7 +418,7 @@ const I18N = {
     attributesHeader:'Atributos', strLabel:'Força (STR)', dexLabel:'Destreza (DEX)', intLabel:'Inteligência (INT)',
     lifeLabel:'Vida', manaLabel:'Mana', staminaLabel:'Stamina',
     statRemaining:'Restam {n} pontos de atributo.', statAllUsed:'Todos os pontos de atributo foram usados.',
-    settingsHeader:'Configurações do Shard', statCapLabel:'Cap de Atributos', skillCapLabel:'Cap de Perícias', maxSkillLabel:'Máximo por Perícia',
+    settingsHeader:'Configurações do Shard', statCapLabel:'Cap de Atributos', skillCapLabel:'Cap de Perícias', maxSkillLabel:'Máximo por Perícia', maxStatLabel:'Máximo por Atributo',
     applyBtn:'Aplicar', defaultsBtn:'Padrão UO',
     saveLoadHeader:'Salvar / Carregar', buildNamePlaceholder:'Nome do build', saveBuildBtn:'Salvar Build',
     loadingBuilds:'Carregando builds salvos…', noSavedBuilds:'Nenhum build salvo ainda.', cannotLoadList:'Não foi possível carregar a lista de builds.',
@@ -439,7 +443,7 @@ const I18N = {
     attributesHeader:'Attributes', strLabel:'Strength (STR)', dexLabel:'Dexterity (DEX)', intLabel:'Intelligence (INT)',
     lifeLabel:'Life', manaLabel:'Mana', staminaLabel:'Stamina',
     statRemaining:'{n} attribute points remaining.', statAllUsed:'All attribute points have been used.',
-    settingsHeader:'Shard Settings', statCapLabel:'Stat Cap', skillCapLabel:'Skill Cap', maxSkillLabel:'Max per Skill',
+    settingsHeader:'Shard Settings', statCapLabel:'Stat Cap', skillCapLabel:'Skill Cap', maxSkillLabel:'Max per Skill', maxStatLabel:'Max per Attribute',
     applyBtn:'Apply', defaultsBtn:'UO Default',
     saveLoadHeader:'Save / Load', buildNamePlaceholder:'Build name', saveBuildBtn:'Save Build',
     loadingBuilds:'Loading saved builds…', noSavedBuilds:'No saved builds yet.', cannotLoadList:'Could not load the list of builds.',
@@ -553,7 +557,7 @@ function categoryLabelOf(name){
 }
 
 const PRESETS = {
-  tamer: { labelKey:'presetTamer', stats:{str:30,dex:40,int:155},
+  tamer: { labelKey:'presetTamer', stats:{str:55,dex:70,int:100},
     skills:{'Animal Taming':100,'Animal Lore':100,'Veterinary':100,'Magery':100,'Meditation':100,'Focus':100,'Musicianship':100,'Discordance':50} },
   miner: { labelKey:'presetMiner', stats:{str:90,dex:50,int:85},
     skills:{'Mining':100,'Item Identification':100,'Blacksmithy':100,'Tinkering':100,'Arms Lore':100,'Lumberjacking':50,'Carpentry':100,'Camping':50} },
@@ -561,11 +565,11 @@ const PRESETS = {
     skills:{'Mining':75,'Lumberjacking':75,'Blacksmithy':75,'Tailoring':75,'Carpentry':75,'Tinkering':75,'Cooking':75,'Bowcraft/Fletching':75,'Alchemy':75,'Inscription':75} },
   magewarrior: { labelKey:'presetMageWarrior', stats:{str:90,dex:45,int:90},
     skills:{'Magery':100,'Evaluate Intelligence':100,'Meditation':100,'Resisting Spells':100,'Swordsmanship':100,'Tactics':100,'Anatomy':100,'Healing':50} },
-  stealtharcher: { labelKey:'presetStealthArcher', stats:{str:60,dex:120,int:45},
+  stealtharcher: { labelKey:'presetStealthArcher', stats:{str:80,dex:100,int:45},
     skills:{'Archery':100,'Tactics':100,'Anatomy':100,'Healing':100,'Hiding':100,'Stealth':100,'Ninjitsu':50,'Resisting Spells':100} },
   bard: { labelKey:'presetBard', stats:{str:50,dex:90,int:85},
     skills:{'Musicianship':100,'Provocation':100,'Peacemaking':100,'Fencing':100,'Tactics':100,'Anatomy':100,'Healing':100,'Resisting Spells':50} },
-  thief: { labelKey:'presetThief', stats:{str:40,dex:140,int:45},
+  thief: { labelKey:'presetThief', stats:{str:80,dex:100,int:45},
     skills:{'Stealing':100,'Hiding':100,'Stealth':100,'Snooping':100,'Lockpicking':100,'Detect Hidden':50,'Remove Trap':50,'Tactics':50,'Fencing':100} },
   dexxer: { labelKey:'presetDexxer', stats:{str:100,dex:100,int:25},
     skills:{'Swordsmanship':100,'Tactics':100,'Anatomy':100,'Healing':100,'Parrying':100,'Chivalry':100,'Resisting Spells':50,'Focus':100} },
@@ -592,7 +596,7 @@ const summaryChips=document.getElementById('summaryChips');
 const searchInput=document.getElementById('searchInput');
 const statCapHint=document.getElementById('statCapHint');
 const skillCapHint=document.getElementById('skillCapHint');
-const cfgStatCap=document.getElementById('cfgStatCap'), cfgSkillCap=document.getElementById('cfgSkillCap'), cfgMaxSkill=document.getElementById('cfgMaxSkill');
+const cfgStatCap=document.getElementById('cfgStatCap'), cfgSkillCap=document.getElementById('cfgSkillCap'), cfgMaxSkill=document.getElementById('cfgMaxSkill'), cfgMaxStat=document.getElementById('cfgMaxStat');
 
 // ---------------- BUILD PRESET BUTTONS ----------------
 function buildPresetButtons(){
@@ -633,7 +637,7 @@ function applyPreset(key){
 }
 
 // ---------------- STAT LOGIC ----------------
-function statMax(){ return Math.max(STAT_MIN, CONFIG.statCap - STAT_MIN*2); }
+function statMax(){ return Math.min(CONFIG.maxStat, Math.max(STAT_MIN, CONFIG.statCap - STAT_MIN*2)); }
 function clampStat(field,newVal){
   newVal=Math.max(STAT_MIN,Math.min(statMax(),newVal));
   const others=(field==='str'?stats.dex+stats.int:field==='dex'?stats.str+stats.int:stats.str+stats.dex);
@@ -802,10 +806,11 @@ function refreshSummaryChips(){
 }
 
 // ---------------- SETTINGS ----------------
-function applyConfigValues(newStatCap, newSkillCap, newMaxSkill){
+function applyConfigValues(newStatCap, newSkillCap, newMaxSkill, newMaxStat){
   CONFIG.statCap = Math.max(30, newStatCap||225);
   CONFIG.skillCap = Math.max(50, newSkillCap||750);
   CONFIG.maxSkill = Math.max(10, newMaxSkill||100);
+  CONFIG.maxStat = Math.max(10, newMaxStat||100);
 
   // reclamp stats sequentially
   const tmp = {str:0,dex:0,int:0};
@@ -818,14 +823,14 @@ function applyConfigValues(newStatCap, newSkillCap, newMaxSkill){
   ALL_SKILLS.forEach(name => { skillVals[name] = Math.min(skillVals[name], CONFIG.maxSkill); });
   ALL_SKILLS.forEach(name => { skillVals[name] = clampSkill(name, skillVals[name]); });
 
-  cfgStatCap.value = CONFIG.statCap; cfgSkillCap.value = CONFIG.skillCap; cfgMaxSkill.value = CONFIG.maxSkill;
+  cfgStatCap.value = CONFIG.statCap; cfgSkillCap.value = CONFIG.skillCap; cfgMaxSkill.value = CONFIG.maxSkill; cfgMaxStat.value = CONFIG.maxStat;
   refreshStatsUI(); renderSkillList(); refreshSummaryChips(); refreshRelatedChips(); refreshSkillTotals();
 }
 document.getElementById('applyCfgBtn').addEventListener('click', () => {
-  applyConfigValues(parseInt(cfgStatCap.value,10), parseInt(cfgSkillCap.value,10), parseInt(cfgMaxSkill.value,10));
+  applyConfigValues(parseInt(cfgStatCap.value,10), parseInt(cfgSkillCap.value,10), parseInt(cfgMaxSkill.value,10), parseInt(cfgMaxStat.value,10));
 });
 document.getElementById('defaultCfgBtn').addEventListener('click', () => {
-  applyConfigValues(DEFAULT_CONFIG.statCap, DEFAULT_CONFIG.skillCap, DEFAULT_CONFIG.maxSkill);
+  applyConfigValues(DEFAULT_CONFIG.statCap, DEFAULT_CONFIG.skillCap, DEFAULT_CONFIG.maxSkill, DEFAULT_CONFIG.maxStat);
 });
 
 // ---------------- RESET / COPY ----------------
@@ -894,7 +899,7 @@ async function loadBuild(key){
     const res=await window.storage.get(key,false);
     if(!res){ flashMsg('saveMsg', t('buildNotFound')); return; }
     const data=JSON.parse(res.value);
-    if(data.config){ CONFIG = {...CONFIG, ...data.config}; cfgStatCap.value=CONFIG.statCap; cfgSkillCap.value=CONFIG.skillCap; cfgMaxSkill.value=CONFIG.maxSkill; }
+    if(data.config){ CONFIG = {...CONFIG, ...data.config}; cfgStatCap.value=CONFIG.statCap; cfgSkillCap.value=CONFIG.skillCap; cfgMaxSkill.value=CONFIG.maxSkill; cfgMaxStat.value=CONFIG.maxStat; }
     stats={ str:data.stats.str, dex:data.stats.dex, int:data.stats.int };
     ALL_SKILLS.forEach(s => skillVals[s]=0);
     Object.entries(data.skills||{}).forEach(([s,v]) => { if(s in skillVals) skillVals[s]=v; });
