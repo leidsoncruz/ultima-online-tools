@@ -220,8 +220,36 @@
   .skill-row .name{ font-size:14px; }
   .skill-row .name small{ display:block; font-size:11px; color: var(--text-dim); font-weight:400; }
   .skill-row input[type=range]{ accent-color: var(--gold); height:14px; }
-  .skill-row .v{ text-align:right; color: var(--gold-bright); font-size:13.5px; }
+  .skill-row input.v{
+    width:100%; text-align:right; color: var(--gold-bright); font-size:13.5px;
+    background: var(--bg-2); border:1px solid var(--border-bright); border-radius: var(--r-sm);
+    padding: 4px 6px;
+  }
+  .skill-row input.v:focus{ outline:none; border-color: var(--gold); }
+  /* hide number input spinners for a cleaner look */
+  .skill-row input.v::-webkit-outer-spin-button, .skill-row input.v::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+  .skill-row input.v[type=number]{ -moz-appearance:textfield; }
   .no-results{ padding: 20px; text-align:center; color: var(--text-dim); font-size:13.5px; }
+
+  /* ---------------- SYNERGY ---------------- */
+  .skill-row.synergy{
+    background: linear-gradient(90deg, rgba(45,212,191,.10), transparent 70%);
+    border-left: 3px solid var(--teal);
+    padding-left: 9px;
+  }
+  .synergy-badge{
+    color: var(--teal); font-size:11px; margin-left:6px; cursor:help;
+  }
+  .related-wrap{ margin-bottom:16px; }
+  .related-label{
+    font-size:11px; text-transform:uppercase; letter-spacing:.08em; color: var(--teal);
+    margin: 0 0 6px; display:flex; align-items:center; gap:6px;
+  }
+  .related-chips{ border-color: var(--teal-dark); background: rgba(45,212,191,.04); }
+  .chip.related{ border-color: var(--teal-dark); cursor:pointer; }
+  .chip.related:hover{ background: var(--teal-dark); color:#eafffb; }
+  .chip.related .via{ color: var(--text-dim); font-size:11px; }
+  .chip.related:hover .via{ color:#eafffb; }
 
   ::-webkit-scrollbar{ width:8px; }
   ::-webkit-scrollbar-thumb{ background: var(--border-bright); border-radius: var(--r-pill); }
@@ -334,11 +362,16 @@
 
       <div class="summary-chips" id="summaryChips"><span class="empty-hint" data-i18n="emptyChipsHint">No skills selected yet — pick a build or adjust below.</span></div>
 
+      <div class="related-wrap" id="relatedWrap" style="display:none;">
+        <div class="related-label"><span>✦</span> <span data-i18n="relatedLabel">Related Skills</span></div>
+        <div class="summary-chips related-chips" id="relatedChips"></div>
+      </div>
+
       <div class="skill-list" id="skillList"></div>
     </div>
   </div>
 
-  <footer data-i18n="footer">by Leidson Cruz especially for Aurora Shard (https://auroriashard.com.br/)</footer>
+  <footer data-i18n="footer">Unofficial planning tool — Ultima Online is a trademark of Broadsword/EA. Caps are fully configurable in the Shard Settings panel.</footer>
 
 <script>
 // ---------------- CONFIG ----------------
@@ -369,6 +402,7 @@ const I18N = {
     copyClipboardSuccess:'Build copiado para a área de transferência.', copyClipboardFail:'Não foi possível copiar automaticamente — selecione o texto manualmente.',
     copyTitle:'=== Build Ultima Online ===', copyStatsLine:'total {t}/{cap}', copyTotalSkills:'Total de perícias: {t}/{cap}',
     footer:'Ferramenta não-oficial de planejamento — Ultima Online é marca da Broadsword/EA. Os limites são totalmente configuráveis no painel de Configurações.',
+    relatedLabel:'Perícias Relacionadas (sugestões)', relatedTo:'Relacionado a: {list}', viaLabel:'via {trigger}',
     catAnimal:'Animais', catBardic:'Bardo', catCombat:'Combate', catMagic:'Magia', catCrafting:'Ofícios', catGathering:'Coleta & Saber', catStealth:'Furtividade', catMisc:'Diversos',
     presetTamer:'Tamer (Mago)', presetMiner:'Minerador/Ferreiro', presetWorker:'Full Worker', presetMageWarrior:'Mago Guerreiro', presetStealthArcher:'Arqueiro Furtivo', presetBard:'Bardo Provo/Paz', presetThief:'Ladrão', presetDexxer:'Dexxer PvP',
   },
@@ -392,6 +426,7 @@ const I18N = {
     copyClipboardSuccess:'Build copied to clipboard.', copyClipboardFail:'Could not copy automatically — please select the text manually.',
     copyTitle:'=== Ultima Online Build ===', copyStatsLine:'total {t}/{cap}', copyTotalSkills:'Total skill points: {t}/{cap}',
     footer:'Unofficial planning tool — Ultima Online is a trademark of Broadsword/EA. Caps are fully configurable in the Shard Settings panel.',
+    relatedLabel:'Related Skills (suggestions)', relatedTo:'Related to: {list}', viaLabel:'via {trigger}',
     catAnimal:'Animals', catBardic:'Bardic', catCombat:'Combat', catMagic:'Magic', catCrafting:'Crafting', catGathering:'Gathering & Lore', catStealth:'Stealth', catMisc:'Misc',
     presetTamer:'Tamer (Mage)', presetMiner:'Miner/Blacksmith', presetWorker:'Full Worker', presetMageWarrior:'Battle Mage', presetStealthArcher:'Stealth Archer', presetBard:'Bard (Provo/Peace)', presetThief:'Thief', presetDexxer:'PvP Dexxer',
   }
@@ -414,6 +449,77 @@ const SKILL_CATEGORIES = [
   { key:'misc', labelKey:'catMisc', skills:['Begging'] },
 ];
 const ALL_SKILLS = SKILL_CATEGORIES.flatMap(c => c.skills);
+
+// Curated skill "synergy" map: skill -> skills that pair well with it mechanically
+// (bonus effects, shared build archetypes, or resource/crafting chains).
+const SKILL_SYNERGIES = {
+  // Animal
+  'Animal Taming': ['Animal Lore','Veterinary','Magery'],
+  'Animal Lore': ['Animal Taming','Veterinary'],
+  'Veterinary': ['Animal Lore','Animal Taming','Healing'],
+  'Herding': ['Animal Taming','Camping'],
+  // Bardic
+  'Musicianship': ['Provocation','Peacemaking','Discordance'],
+  'Discordance': ['Musicianship','Tactics'],
+  'Peacemaking': ['Musicianship','Focus'],
+  'Provocation': ['Musicianship','Tactics'],
+  // Combat
+  'Archery': ['Tactics','Anatomy','Bowcraft/Fletching'],
+  'Fencing': ['Tactics','Anatomy','Poisoning'],
+  'Mace Fighting': ['Tactics','Anatomy'],
+  'Parrying': ['Tactics','Bushido'],
+  'Swordsmanship': ['Tactics','Anatomy'],
+  'Tactics': ['Anatomy','Healing'],
+  'Throwing': ['Tactics','Anatomy'],
+  'Wrestling': ['Tactics','Anatomy','Ninjitsu'],
+  'Anatomy': ['Healing','Tactics'],
+  'Healing': ['Anatomy','Veterinary'],
+  'Resisting Spells': ['Magery','Tactics'],
+  // Magic
+  'Magery': ['Evaluate Intelligence','Meditation','Resisting Spells'],
+  'Evaluate Intelligence': ['Magery','Meditation'],
+  'Meditation': ['Magery','Focus'],
+  'Focus': ['Meditation','Animal Taming'],
+  'Chivalry': ['Tactics','Resisting Spells','Healing'],
+  'Necromancy': ['Spirit Speak','Swordsmanship'],
+  'Spellweaving': ['Magery','Meditation','Evaluate Intelligence'],
+  'Spirit Speak': ['Necromancy'],
+  'Mysticism': ['Focus','Meditation','Imbuing'],
+  'Bushido': ['Parrying','Tactics','Anatomy'],
+  'Ninjitsu': ['Hiding','Stealth','Wrestling'],
+  'Imbuing': ['Arms Lore','Tinkering','Mysticism','Alchemy'],
+  // Crafting
+  'Alchemy': ['Item Identification','Poisoning'],
+  'Blacksmithy': ['Arms Lore','Mining','Tinkering'],
+  'Bowcraft/Fletching': ['Arms Lore','Lumberjacking','Archery'],
+  'Carpentry': ['Lumberjacking','Arms Lore','Bowcraft/Fletching'],
+  'Cartography': ['Item Identification'],
+  'Cooking': ['Camping','Taste Identification'],
+  'Inscription': ['Magery','Evaluate Intelligence'],
+  'Tailoring': ['Arms Lore','Blacksmithy'],
+  'Tinkering': ['Mining','Blacksmithy','Imbuing'],
+  // Gathering & Lore
+  'Mining': ['Blacksmithy','Item Identification','Tinkering'],
+  'Lumberjacking': ['Carpentry','Bowcraft/Fletching','Camping'],
+  'Fishing': ['Cooking','Item Identification'],
+  'Camping': ['Lumberjacking','Cooking'],
+  'Item Identification': ['Mining','Cartography','Alchemy'],
+  'Arms Lore': ['Blacksmithy','Tailoring','Bowcraft/Fletching'],
+  'Taste Identification': ['Cooking','Poisoning'],
+  'Forensic Evaluation': ['Anatomy','Healing'],
+  // Stealth
+  'Hiding': ['Stealth','Stealing','Snooping'],
+  'Stealth': ['Hiding','Ninjitsu'],
+  'Stealing': ['Hiding','Snooping','Item Identification'],
+  'Snooping': ['Hiding','Stealing'],
+  'Lockpicking': ['Stealing','Remove Trap','Detect Hidden'],
+  'Detect Hidden': ['Hiding','Remove Trap'],
+  'Remove Trap': ['Lockpicking','Detect Hidden'],
+  'Poisoning': ['Stealing','Fencing','Taste Identification'],
+  // Misc
+  'Begging': ['Stealing'],
+};
+
 function categoryLabelOf(name){
   const cat = SKILL_CATEGORIES.find(c => c.skills.includes(name));
   return cat ? t(cat.labelKey) : '';
@@ -495,7 +601,7 @@ function applyPreset(key){
   Object.entries(p.skills).forEach(([s,v]) => { if(s in skillVals) skillVals[s] = Math.min(v, CONFIG.maxSkill); });
   ALL_SKILLS.forEach(name => { skillVals[name] = clampSkill(name, skillVals[name]); });
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', b.dataset.key===key));
-  refreshStatsUI(); renderSkillList(); refreshSummaryChips(); refreshSkillTotals();
+  refreshStatsUI(); renderSkillList(); refreshSummaryChips(); refreshRelatedChips(); refreshSkillTotals();
 }
 
 // ---------------- STAT LOGIC ----------------
@@ -548,7 +654,7 @@ function clampSkill(name,newVal){
 }
 function onSkillInput(name,value){
   skillVals[name]=clampSkill(name, parseFloat(value)||0);
-  refreshSkillRow(name); refreshSkillTotals(); refreshSummaryChips();
+  refreshSkillRow(name); refreshSkillTotals(); refreshSummaryChips(); refreshRelatedChips();
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
 }
 function refreshSkillRow(name){
@@ -558,7 +664,9 @@ function refreshSkillRow(name){
   const rangeEl = row.querySelector('input[type=range]');
   rangeEl.max = CONFIG.maxSkill;
   rangeEl.value=v;
-  row.querySelector('.v').textContent=v;
+  const numEl = row.querySelector('input.v');
+  numEl.max = CONFIG.maxSkill;
+  if(document.activeElement !== numEl) numEl.value = v;
 }
 function refreshSkillTotals(){
   const total=totalSkillPoints(), remaining=CONFIG.skillCap-total;
@@ -570,23 +678,71 @@ function refreshSkillTotals(){
 }
 function slug(name){ return name.toLowerCase().replace(/[^a-z0-9]+/g,'-'); }
 
+// Returns { skillName: [triggerSkillNames...] } for skills that are recommended
+// by currently-active skills but don't have points allocated yet.
+function computeSynergySuggestions(){
+  const map = {};
+  ALL_SKILLS.forEach(trigger => {
+    if(skillVals[trigger] > 0 && SKILL_SYNERGIES[trigger]){
+      SKILL_SYNERGIES[trigger].forEach(target => {
+        if(skillVals[target] === 0){
+          if(!map[target]) map[target] = [];
+          if(!map[target].includes(trigger)) map[target].push(trigger);
+        }
+      });
+    }
+  });
+  return map;
+}
+
 function renderSkillList(){
   skillList.innerHTML='';
   let names;
   if(searchTerm){ names = ALL_SKILLS.filter(n => n.toLowerCase().includes(searchTerm)); }
   else { names = SKILL_CATEGORIES.find(c => c.key===activeTab).skills; }
   if(names.length===0){ skillList.innerHTML=`<div class="no-results">–</div>`; return; }
+  const suggestions = computeSynergySuggestions();
   names.forEach(name => {
     const row=document.createElement('div');
-    row.className='skill-row'; row.id='skillrow-'+slug(name);
+    const triggers = suggestions[name];
+    row.className='skill-row' + (triggers ? ' synergy' : '');
+    row.id='skillrow-'+slug(name);
     const showCat = !!searchTerm;
+    const badge = triggers ? `<span class="synergy-badge" title="${t('relatedTo',{list:triggers.join(', ')})}">✦</span>` : '';
     row.innerHTML = `
-      <div class="name">${name}${showCat ? `<small>${categoryLabelOf(name)}</small>` : ''}</div>
+      <div class="name">${name}${badge}${showCat ? `<small>${categoryLabelOf(name)}</small>` : ''}</div>
       <input type="range" min="0" max="${CONFIG.maxSkill}" value="${skillVals[name]}">
-      <div class="v mono">${skillVals[name]}</div>
+      <input type="number" class="v mono" min="0" max="${CONFIG.maxSkill}" value="${skillVals[name]}">
     `;
     row.querySelector('input[type=range]').addEventListener('input', e => onSkillInput(name, e.target.value));
+    const numInput = row.querySelector('input[type=number]');
+    numInput.addEventListener('input', e => onSkillInput(name, e.target.value));
+    numInput.addEventListener('blur', e => { e.target.value = skillVals[name]; });
     skillList.appendChild(row);
+  });
+}
+
+function refreshRelatedChips(){
+  const suggestions = computeSynergySuggestions();
+  const names = Object.keys(suggestions).sort((a,b) => suggestions[b].length - suggestions[a].length);
+  const relatedWrap = document.getElementById('relatedWrap');
+  const relatedChips = document.getElementById('relatedChips');
+  if(names.length === 0){ relatedWrap.style.display='none'; relatedChips.innerHTML=''; return; }
+  relatedWrap.style.display='block';
+  relatedChips.innerHTML='';
+  names.forEach(name => {
+    const chip=document.createElement('div');
+    chip.className='chip related';
+    chip.innerHTML = `${name} <span class="via">${t('viaLabel',{trigger:suggestions[name][0]})}</span>`;
+    chip.title = t('relatedTo',{list:suggestions[name].join(', ')});
+    chip.addEventListener('click', () => {
+      searchTerm = name.toLowerCase();
+      searchInput.value = name;
+      renderSkillList();
+      const row = document.getElementById('skillrow-'+slug(name));
+      if(row) row.scrollIntoView({behavior:'smooth', block:'center'});
+    });
+    relatedChips.appendChild(chip);
   });
 }
 
@@ -603,7 +759,7 @@ function refreshSummaryChips(){
     chip.innerHTML = `${name} <span class="n mono">${skillVals[name]}</span> <button>×</button>`;
     chip.querySelector('button').addEventListener('click', () => {
       skillVals[name]=0;
-      refreshSkillRow(name); refreshSkillTotals(); refreshSummaryChips();
+      refreshSkillRow(name); refreshSkillTotals(); refreshSummaryChips(); refreshRelatedChips();
     });
     summaryChips.appendChild(chip);
   });
@@ -627,7 +783,7 @@ function applyConfigValues(newStatCap, newSkillCap, newMaxSkill){
   ALL_SKILLS.forEach(name => { skillVals[name] = clampSkill(name, skillVals[name]); });
 
   cfgStatCap.value = CONFIG.statCap; cfgSkillCap.value = CONFIG.skillCap; cfgMaxSkill.value = CONFIG.maxSkill;
-  refreshStatsUI(); renderSkillList(); refreshSummaryChips(); refreshSkillTotals();
+  refreshStatsUI(); renderSkillList(); refreshSummaryChips(); refreshRelatedChips(); refreshSkillTotals();
 }
 document.getElementById('applyCfgBtn').addEventListener('click', () => {
   applyConfigValues(parseInt(cfgStatCap.value,10), parseInt(cfgSkillCap.value,10), parseInt(cfgMaxSkill.value,10));
@@ -641,7 +797,7 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   stats={str:STAT_MIN,dex:STAT_MIN,int:STAT_MIN};
   ALL_SKILLS.forEach(s => skillVals[s]=0);
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-  refreshStatsUI(); renderSkillList(); refreshSummaryChips(); refreshSkillTotals();
+  refreshStatsUI(); renderSkillList(); refreshSummaryChips(); refreshRelatedChips(); refreshSkillTotals();
 });
 
 document.getElementById('copyBtn').addEventListener('click', async () => {
@@ -707,7 +863,7 @@ async function loadBuild(key){
     ALL_SKILLS.forEach(s => skillVals[s]=0);
     Object.entries(data.skills||{}).forEach(([s,v]) => { if(s in skillVals) skillVals[s]=v; });
     document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-    refreshStatsUI(); renderSkillList(); refreshSummaryChips(); refreshSkillTotals();
+    refreshStatsUI(); renderSkillList(); refreshSummaryChips(); refreshRelatedChips(); refreshSkillTotals();
     flashMsg('saveMsg', t('buildLoaded'));
   }catch(err){ flashMsg('saveMsg', t('buildLoadError')); }
 }
@@ -729,6 +885,7 @@ function applyLanguage(lang){
   refreshStatsUI();
   renderSkillList();
   refreshSummaryChips();
+  refreshRelatedChips();
   refreshSkillTotals();
   refreshSavedList();
 }
