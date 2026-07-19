@@ -930,6 +930,147 @@
       display: none;
     }
 
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 6, 10, .72);
+      backdrop-filter: blur(2px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-panel {
+      position: relative;
+      width: 100%;
+      max-width: 560px;
+      max-height: 86vh;
+      overflow: auto;
+      background: linear-gradient(160deg, var(--panel-2), var(--panel));
+      border: 1px solid var(--hairline-bright);
+      border-radius: var(--radius);
+      box-shadow: 0 20px 60px var(--shadow);
+      padding: 28px 30px;
+    }
+
+    .modal-panel h3 {
+      margin: 0 0 12px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.3rem;
+      color: var(--gold-soft);
+    }
+
+    .modal-lead {
+      font-family: 'Inter', sans-serif;
+      font-size: .85rem;
+      color: var(--parchment-dim);
+      margin: 14px 0 10px;
+      line-height: 1.5;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      color: var(--parchment-dim);
+      font-size: .9rem;
+      padding: 4px 8px;
+      border-radius: var(--radius-pill);
+    }
+
+    .modal-close:hover {
+      color: var(--parchment);
+      border: none;
+    }
+
+    .modal-cols {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .modal-col-group {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .modal-tag {
+      display: inline-block;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: .68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      padding: 3px 10px;
+      border-radius: var(--radius-pill);
+      margin-bottom: 8px;
+    }
+
+    .modal-tag.required {
+      background: rgba(224, 178, 58, .15);
+      color: var(--gold-soft);
+      border: 1px solid var(--gold-dim);
+    }
+
+    .modal-tag.optional {
+      background: rgba(45, 212, 191, .1);
+      color: var(--teal);
+      border: 1px solid var(--teal-dark);
+    }
+
+    .modal-col {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 7px 0;
+      border-bottom: 1px dashed var(--hairline);
+      font-family: 'Inter', sans-serif;
+      font-size: .8rem;
+    }
+
+    .modal-col b {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--parchment);
+      font-size: .85rem;
+    }
+
+    .modal-col span {
+      color: var(--parchment-dim);
+      font-size: .76rem;
+    }
+
+    .modal-example {
+      background: var(--bg-2);
+      border: 1px solid var(--hairline-bright);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: .72rem;
+      color: var(--teal);
+      overflow-x: auto;
+      line-height: 1.6;
+    }
+
+    .modal-notes {
+      margin: 14px 0 0;
+      padding-left: 18px;
+    }
+
+    .modal-notes li {
+      font-family: 'Inter', sans-serif;
+      font-size: .78rem;
+      color: var(--parchment-dim);
+      margin-bottom: 7px;
+      line-height: 1.5;
+    }
+
     @media (max-width: 860px) {
       main {
         flex-direction: column;
@@ -955,6 +1096,7 @@
         <div class="file-controls sans">
           <button id="btnPick" class="primary">Selecionar arquivo CSV</button>
           <button id="btnReload">↻ Atualizar</button>
+          <button id="btnCsvHelp" class="ghost" title="Formato esperado do CSV">? formato do CSV</button>
           <span class="load-meta" id="loadMeta">nenhum arquivo carregado</span>
           <input type="file" id="fileInput" accept=".csv,text/csv">
         </div>
@@ -1080,6 +1222,45 @@
         uma vez e use "Atualizar" para reler as mudanças.</span>
       <span id="engineNote"></span>
     </footer>
+  </div>
+
+  <div class="modal-backdrop" id="csvHelpBackdrop">
+    <div class="modal-panel">
+      <button class="modal-close" id="csvHelpClose">✕</button>
+      <h3>Formato esperado do CSV</h3>
+      <p class="modal-lead">O arquivo precisa ter uma linha de cabeçalho com os nomes das colunas (não importa a ordem).
+        As colunas são identificadas pelo nome, não pela posição.</p>
+
+      <div class="modal-cols">
+        <div class="modal-col-group">
+          <span class="modal-tag required">obrigatórias</span>
+          <div class="modal-col"><b>x</b><span>coordenada horizontal (número)</span></div>
+          <div class="modal-col"><b>y</b><span>coordenada vertical (número)</span></div>
+          <div class="modal-col"><b>animal</b><span>nome da criatura</span></div>
+        </div>
+        <div class="modal-col-group">
+          <span class="modal-tag optional">opcionais</span>
+          <div class="modal-col"><b>z</b><span>altitude (padrão 0 se ausente)</span></div>
+          <div class="modal-col"><b>serial</b><span>identificador único da criatura no jogo</span></div>
+          <div class="modal-col"><b>notoriedade</b><span>ex: Inocente, Criminoso, Invulneravel</span></div>
+        </div>
+      </div>
+
+      <p class="modal-lead">Exemplo:</p>
+      <pre class="modal-example mono">x,y,z,animal,serial,notoriedade
+1405,3002,0,Cavalo Selvagem,260396,Invulneravel
+1434,2999,0,SilverBullet,264866,Criminoso
+1790,3378,0,SilverBullet,271044,Criminoso</pre>
+
+      <ul class="modal-notes">
+        <li>Separador: vírgula. Se algum valor tiver vírgula dentro, coloque entre aspas <span class="mono">"assim,
+            aqui"</span>.</li>
+        <li>Colunas extras no arquivo não atrapalham — são simplesmente ignoradas.</li>
+        <li>Salve o arquivo em UTF-8 para acentos aparecerem certinho.</li>
+        <li>Toda vez que você carregar um arquivo novo, animais que já existiam continuam marcados no filtro, e qualquer
+          animal novo aparece automaticamente já selecionado.</li>
+      </ul>
+    </div>
   </div>
 
   <script>
@@ -2125,6 +2306,17 @@
       };
 
       document.getElementById('btnPick').onclick = pickAndLoad;
+
+      // ---------- CSV format help modal ----------
+      const csvHelpBackdrop = document.getElementById('csvHelpBackdrop');
+      document.getElementById('btnCsvHelp').onclick = () => csvHelpBackdrop.classList.add('open');
+      document.getElementById('csvHelpClose').onclick = () => csvHelpBackdrop.classList.remove('open');
+      csvHelpBackdrop.addEventListener('click', (e) => {
+        if (e.target === csvHelpBackdrop) csvHelpBackdrop.classList.remove('open');
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') csvHelpBackdrop.classList.remove('open');
+      });
       document.getElementById('btnReload').onclick = async () => {
         if (fileHandle) await loadFromHandle();
         else pickAndLoad();
