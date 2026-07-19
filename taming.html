@@ -1058,6 +1058,7 @@
         rebuildRawData();
         lastLoadedName = filename || 'arquivo selecionado';
         lastLoadedTime = new Date();
+        saveCSVData();
 
         recomputeClusters();
 
@@ -1635,7 +1636,7 @@
           <b>${escapeHtml(r.animal)}</b>
           <span class="tame-meta">${escapeHtml(r.region)} · x${Math.round(r.x)} y${Math.round(r.y)}</span>
         </span>
-        <span class="tame-elapsed mono">${elapsedText(r.tamedAt)}</span>
+        <span class="tame-elapsed mono" data-tamed-at="${r.tamedAt}">${elapsedText(r.tamedAt)}</span>
         <button class="tame-remove" title="Remover registro" data-key="${r.key}">✕</button>
       </div>
     `).join('');
@@ -1659,7 +1660,17 @@
         }
       };
 
-      setInterval(() => { if (tamedRecords.size > 0) renderTameList(); }, 30000);
+      setInterval(() => {
+        document.querySelectorAll('.tame-elapsed[data-tamed-at]').forEach(el => {
+          const tamedAt = parseInt(el.getAttribute('data-tamed-at'), 10);
+          el.textContent = elapsedText(tamedAt);
+        });
+        const cpStatus = document.getElementById('cpStatus');
+        if (cpStatus && cpStatus.hasAttribute('data-tamed-at')) {
+          const tamedAt = parseInt(cpStatus.getAttribute('data-tamed-at'), 10);
+          cpStatus.textContent = `⏱ domado há ${elapsedText(tamedAt)}`;
+        }
+      }, 1000);
 
       function showClickPanel(p, clientX, clientY) {
         selectedPoint = p;
@@ -1675,7 +1686,7 @@
       <div class="cp-row">${escapeHtml(p._region.name)} · x${Math.round(p.x)} y${Math.round(p.y)}</div>
       <div class="cp-row">${escapeHtml(p.notoriedade || '—')}${p.serial ? ' · serial ' + escapeHtml(String(p.serial)) : ''}${p.manual ? ' · adicionado manualmente' : ''}</div>
       ${rec
-            ? `<div class="cp-status">⏱ domado há ${elapsedText(rec.tamedAt)}</div>
+            ? `<div class="cp-status" id="cpStatus" data-tamed-at="${rec.tamedAt}">⏱ domado há ${elapsedText(rec.tamedAt)}</div>
            <button class="cp-btn cp-btn-clear sans" id="cpUnmark">Desmarcar</button>`
             : `<button class="cp-btn cp-btn-primary sans" id="cpMark">Marcar como domado agora</button>`
           }
@@ -1720,6 +1731,26 @@
       function saveManual() {
         try {
           localStorage.setItem('atlas_manual_v1', JSON.stringify(manualEntries));
+        } catch (e) { /* localStorage indisponível */ }
+      }
+
+      function loadCSVData() {
+        try {
+          const raw = localStorage.getItem('atlas_csv_data_v1');
+          if (raw) {
+            csvBaseData = JSON.parse(raw);
+            lastLoadedName = localStorage.getItem('atlas_csv_name_v1') || 'arquivo carregado';
+            const rawTime = localStorage.getItem('atlas_csv_time_v1');
+            lastLoadedTime = rawTime ? new Date(parseInt(rawTime, 10)) : null;
+          }
+        } catch (e) { /* localStorage indisponível */ }
+      }
+
+      function saveCSVData() {
+        try {
+          localStorage.setItem('atlas_csv_data_v1', JSON.stringify(csvBaseData));
+          localStorage.setItem('atlas_csv_name_v1', lastLoadedName);
+          localStorage.setItem('atlas_csv_time_v1', lastLoadedTime ? lastLoadedTime.getTime().toString() : '');
         } catch (e) { /* localStorage indisponível */ }
       }
 
@@ -1820,6 +1851,7 @@
       };
 
       // ---------- Init ----------
+      loadCSVData();
       loadTamed();
       loadManual();
       rebuildRawData();
