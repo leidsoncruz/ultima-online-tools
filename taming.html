@@ -1071,6 +1071,11 @@
       line-height: 1.5;
     }
 
+    #btnDownloadTemplate {
+      margin-top: 14px;
+      width: 100%;
+    }
+
     @media (max-width: 860px) {
       main {
         flex-direction: column;
@@ -1251,6 +1256,8 @@
 1405,3002,0,Cavalo Selvagem,260396,Invulneravel
 1434,2999,0,SilverBullet,264866,Criminoso
 1790,3378,0,SilverBullet,271044,Criminoso</pre>
+
+      <button id="btnDownloadTemplate" class="primary sans">⬇ Baixar modelo CSV</button>
 
       <ul class="modal-notes">
         <li>Separador: vírgula. Se algum valor tiver vírgula dentro, coloque entre aspas <span class="mono">"assim,
@@ -2060,12 +2067,11 @@
       }
 
       function elapsedText(ms) {
-        const s = Math.floor((Date.now() - ms) / 1000);
-        if (s < 60) return s + 's';
-        const m = Math.floor(s / 60);
-        if (m < 60) return m + 'min';
-        const h = Math.floor(m / 60);
-        const remM = m % 60;
+        const totalMin = Math.floor((Date.now() - ms) / 60000);
+        if (totalMin < 1) return '<1min';
+        if (totalMin < 60) return totalMin + 'min';
+        const h = Math.floor(totalMin / 60);
+        const remM = totalMin % 60;
         if (h < 24) return h + 'h ' + remM + 'min';
         const d = Math.floor(h / 24);
         const remH = h % 24;
@@ -2129,7 +2135,7 @@
         }
       };
 
-      setInterval(() => { if (tamedRecords.size > 0) renderTameList(); }, 30000);
+      setInterval(() => { if (tamedRecords.size > 0) renderTameList(); }, 60000);
 
       function showClickPanel(p, clientX, clientY) {
         selectedPoint = p;
@@ -2317,6 +2323,22 @@
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') csvHelpBackdrop.classList.remove('open');
       });
+
+      document.getElementById('btnDownloadTemplate').onclick = () => {
+        const csv = "x,y,z,animal,serial,notoriedade\n"
+          + "1405,3002,0,Cavalo Selvagem,260396,Invulneravel\n"
+          + "1434,2999,0,SilverBullet,264866,Criminoso\n"
+          + "1790,3378,0,SilverBullet,271044,Criminoso\n";
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'modelo_animal_map.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      };
       document.getElementById('btnReload').onclick = async () => {
         if (fileHandle) await loadFromHandle();
         else pickAndLoad();
