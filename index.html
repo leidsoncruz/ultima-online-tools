@@ -267,6 +267,10 @@
     padding:10px 14px; margin-bottom:16px;
   }
   .shard-disclaimer .ic{ color: var(--gold); flex-shrink:0; }
+  .shard-link{ color: var(--teal); text-decoration:none; font-weight:600; white-space:nowrap; }
+  .shard-link:hover{ text-decoration:underline; }
+  footer .footer-sep{ margin: 0 6px; opacity:.5; }
+  footer .shard-link{ color: var(--gold-bright); }
 
   /* ---------------- SYNERGY ---------------- */
   .skill-row.synergy{
@@ -293,6 +297,44 @@
   ::-webkit-scrollbar-track{ background: transparent; }
 
   footer{ max-width:1240px; margin:22px auto 0; text-align:center; color: var(--text-dim); font-size:11.5px; }
+
+  /* ---------------- EXPORT CARD (offscreen, captured to PNG) ---------------- */
+  .export-offscreen{ position:absolute; left:-9999px; top:0; }
+  .export-card{
+    width: 880px;
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(160deg, #0e1421, #0a0e17);
+    color: #e7ecf5;
+    padding: 32px;
+  }
+  .export-card .ec-header{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    border-bottom: 2px solid #3a4d6b; padding-bottom:16px; margin-bottom:20px;
+  }
+  .export-card .ec-title{ font-family:'Rajdhani',sans-serif; font-size:30px; font-weight:700; color:#f5d06e; margin:0; }
+  .export-card .ec-sub{ font-size:13px; color:#8b96ab; margin:4px 0 0; }
+  .export-card .ec-date{ font-family:'JetBrains Mono',monospace; font-size:11px; color:#8b96ab; text-align:right; }
+  .export-card .ec-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:22px; }
+  .export-card .ec-box{ background:#121a28; border:1px solid #263349; border-radius:14px; padding:16px 18px; }
+  .export-card .ec-box h3{ font-family:'Rajdhani',sans-serif; font-size:14px; text-transform:uppercase; letter-spacing:.06em; color:#2dd4bf; margin:0 0 12px; border-bottom:1px solid #263349; padding-bottom:8px; }
+  .export-card .ec-stat-row{ display:flex; justify-content:space-between; font-size:14px; margin-bottom:8px; }
+  .export-card .ec-stat-row .k{ color:#8b96ab; }
+  .export-card .ec-stat-row .v{ font-family:'JetBrains Mono',monospace; font-weight:600; }
+  .export-card .ec-status{ margin-top:10px; padding-top:10px; border-top:1px dashed #263349; font-size:12.5px; font-weight:600; }
+  .export-card .ec-status.complete{ color:#2dd4bf; }
+  .export-card .ec-status.missing{ color:#ef4444; }
+  .export-card .ec-resources{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:12px; }
+  .export-card .ec-res-box{ background:#0a0e17; border:1px solid #263349; border-radius:10px; padding:8px; text-align:center; }
+  .export-card .ec-res-box .rl{ font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; color:#8b96ab; }
+  .export-card .ec-res-box .rv{ font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:700; color:#f5d06e; }
+  .export-card .ec-skills-box{ background:#121a28; border:1px solid #263349; border-radius:14px; padding:16px 18px; }
+  .export-card .ec-cat{ margin-bottom:14px; }
+  .export-card .ec-cat h4{ font-family:'Rajdhani',sans-serif; font-size:12.5px; text-transform:uppercase; letter-spacing:.06em; color:#e0b23a; margin:0 0 8px; }
+  .export-card .ec-skill-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap:6px 16px; }
+  .export-card .ec-skill-item{ display:flex; justify-content:space-between; font-size:12.5px; padding:3px 0; border-bottom:1px dotted #263349; }
+  .export-card .ec-skill-item .v{ font-family:'JetBrains Mono',monospace; color:#f5d06e; font-weight:600; }
+  .export-card .ec-empty{ font-size:13px; color:#8b96ab; font-style:italic; }
+  .export-card .ec-footer{ margin-top:22px; padding-top:14px; border-top:1px solid #263349; font-size:10.5px; color:#8b96ab; text-align:center; }
 </style>
 </head>
 <body>
@@ -327,9 +369,10 @@
       <div class="panel">
         <h2><span class="bar"></span> <span data-i18n="presetsHeader">Ready-made Builds</span></h2>
         <div class="preset-grid" id="presetGrid"></div>
-        <div class="util-row">
+        <div class="util-row" style="flex-wrap:wrap;">
           <button class="util-btn" id="resetBtn" data-i18n="resetAll">Reset All</button>
           <button class="util-btn accent" id="copyBtn" data-i18n="copyBuild">Copy Build</button>
+          <button class="util-btn accent" id="exportImgBtn" data-i18n="exportImage" style="flex-basis:100%;">Export Image</button>
         </div>
       </div>
 
@@ -409,7 +452,10 @@
 
       <div class="shard-disclaimer">
         <span class="ic">ⓘ</span>
-        <span data-i18n="shardDisclaimer">Descriptions and synergies below follow standard Ultima Online (OSI) mechanics as a general reference. Your shard may implement things differently, rebalance bonuses, or not use certain skills at all — for example, Ninjitsu isn't used on some shards, such as Aurora. Always check your shard's own rules.</span>
+        <span>
+          <span data-i18n="shardDisclaimer">Descriptions and synergies below follow standard Ultima Online (OSI) mechanics as a general reference. Your shard may implement things differently, rebalance bonuses, or not use certain skills at all — for example, Ninjitsu isn't used on some shards, such as Aurora. Always check your shard's own rules.</span>
+          <a href="https://auroriashard.com.br/" target="_blank" rel="noopener" class="shard-link">auroriashard.com.br ↗</a>
+        </span>
       </div>
 
       <div class="skills-top">
@@ -432,8 +478,13 @@
     </div>
   </div>
 
-  <footer data-i18n="footer">Unofficial planning tool — Ultima Online is a trademark of Broadsword/EA. Caps are fully configurable in the Shard Settings panel.</footer>
+  <footer>
+    <span data-i18n="footer">Unofficial planning tool — Ultima Online is a trademark of Broadsword/EA. Caps are fully configurable in the Shard Settings panel.</span>
+    <span class="footer-sep">·</span>
+    <a href="https://auroriashard.com.br/" target="_blank" rel="noopener" class="shard-link">Aurora Shard</a>
+  </footer>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 // ---------------- CONFIG ----------------
 let CONFIG = { statCap: 225, skillCap: 750, maxSkill: 100, maxStat: 100 };
@@ -446,7 +497,8 @@ const I18N = {
   pt: {
     title:'Forjador de Personagens', subtitle:'Ultima Online — monte stats e perícias antes de partir para Britannia',
     gemStat:'Pontos de Stat', gemSkill:'Pontos de Skill',
-    presetsHeader:'Builds Prontas', resetAll:'Zerar Tudo', copyBuild:'Copiar Build',
+    presetsHeader:'Builds Prontas', resetAll:'Zerar Tudo', copyBuild:'Copiar Build', exportImage:'Exportar Imagem (PNG)', exportError:'Não foi possível gerar a imagem.', exportGenerating:'Gerando...',
+    ecSubtitle:'Ficha de Build', ecGeneratedOn:'Gerado em {date}', ecAttributes:'Atributos', ecTotal:'Total', ecResources:'Recursos', ecSkillsTotal:'Total de Perícias', ecStatusComplete:'✓ Todos os pontos foram utilizados', ecStatusMissingStat:'⚠ Faltam {n} pontos de atributo por distribuir', ecStatusMissingSkill:'⚠ Faltam {n} pontos de perícia por distribuir', ecNoSkills:'Nenhuma perícia configurada ainda.', ecFooter:'Gerado pelo Forjador de Personagens — ferramenta não-oficial. Confira as regras do seu shard.',
     attributesHeader:'Atributos', strLabel:'Força (STR)', dexLabel:'Destreza (DEX)', intLabel:'Inteligência (INT)',
     lifeLabel:'Vida', manaLabel:'Mana', staminaLabel:'Stamina',
     statRemaining:'Restam {n} pontos de atributo.', statAllUsed:'Todos os pontos de atributo foram usados.',
@@ -472,7 +524,8 @@ const I18N = {
   en: {
     title:'Character Forge', subtitle:'Ultima Online — plan your stats and skills before setting out into Britannia',
     gemStat:'Stat Points', gemSkill:'Skill Points',
-    presetsHeader:'Ready-made Builds', resetAll:'Reset All', copyBuild:'Copy Build',
+    presetsHeader:'Ready-made Builds', resetAll:'Reset All', copyBuild:'Copy Build', exportImage:'Export Image (PNG)', exportError:'Could not generate the image.', exportGenerating:'Generating...',
+    ecSubtitle:'Build Sheet', ecGeneratedOn:'Generated on {date}', ecAttributes:'Attributes', ecTotal:'Total', ecResources:'Resources', ecSkillsTotal:'Total Skill Points', ecStatusComplete:'✓ All points have been allocated', ecStatusMissingStat:'⚠ {n} attribute points still unallocated', ecStatusMissingSkill:'⚠ {n} skill points still unallocated', ecNoSkills:'No skills configured yet.', ecFooter:'Generated by the Character Forge — unofficial tool. Check your shard\'s own rules.',
     attributesHeader:'Attributes', strLabel:'Strength (STR)', dexLabel:'Dexterity (DEX)', intLabel:'Intelligence (INT)',
     lifeLabel:'Life', manaLabel:'Mana', staminaLabel:'Stamina',
     statRemaining:'{n} attribute points remaining.', statAllUsed:'All attribute points have been used.',
@@ -507,7 +560,7 @@ const SKILL_CATEGORIES = [
   { key:'animal', labelKey:'catAnimal', skills:['Animal Taming','Animal Lore','Veterinary','Herding'] },
   { key:'bardic', labelKey:'catBardic', skills:['Musicianship','Discordance','Peacemaking','Provocation'] },
   { key:'combat', labelKey:'catCombat', skills:['Archery','Fencing','Mace Fighting','Parrying','Swordsmanship','Tactics','Throwing','Wrestling','Anatomy','Healing','Resisting Spells'] },
-  { key:'magic', labelKey:'catMagic', skills:['Magery','Evaluate Intelligence','Meditation','Focus','Chivalry','Necromancy','Spellweaving','Spirit Speak','Mysticism','Bushido','Ninjitsu','Imbuing'] },
+  { key:'magic', labelKey:'catMagic', skills:['Magery','Evaluate Intelligence','Meditation','Chivalry','Necromancy','Spellweaving','Spirit Speak','Mysticism','Bushido','Ninjitsu','Imbuing'] },
   { key:'crafting', labelKey:'catCrafting', skills:['Alchemy','Blacksmithy','Bowcraft/Fletching','Carpentry','Cartography','Cooking','Inscription','Tailoring','Tinkering'] },
   { key:'gathering', labelKey:'catGathering', skills:['Mining','Lumberjacking','Fishing','Camping','Item Identification','Arms Lore','Taste Identification','Forensic Evaluation','Tracking'] },
   { key:'stealth', labelKey:'catStealth', skills:['Hiding','Stealth','Stealing','Snooping','Lockpicking','Detect Hidden','Remove Trap','Poisoning'] },
@@ -526,7 +579,7 @@ const SKILL_SYNERGIES = {
   // Bardic
   'Musicianship': ['Provocation','Peacemaking','Discordance'],
   'Discordance': ['Musicianship','Tactics'],
-  'Peacemaking': ['Musicianship','Focus'],
+  'Peacemaking': ['Musicianship'],
   'Provocation': ['Musicianship','Tactics'],
   // Combat
   'Archery': ['Tactics','Anatomy','Bowcraft/Fletching'],
@@ -543,13 +596,12 @@ const SKILL_SYNERGIES = {
   // Magic
   'Magery': ['Evaluate Intelligence','Meditation','Resisting Spells'],
   'Evaluate Intelligence': ['Magery','Meditation'],
-  'Meditation': ['Magery','Focus'],
-  'Focus': ['Meditation','Animal Taming'],
+  'Meditation': ['Magery','Mysticism'],
   'Chivalry': ['Tactics','Resisting Spells','Healing'],
   'Necromancy': ['Spirit Speak','Swordsmanship'],
   'Spellweaving': ['Magery','Meditation','Evaluate Intelligence'],
   'Spirit Speak': ['Necromancy'],
-  'Mysticism': ['Focus','Meditation','Imbuing'],
+  'Mysticism': ['Meditation','Evaluate Intelligence','Imbuing'],
   'Bushido': ['Parrying','Tactics','Anatomy'],
   'Ninjitsu': ['Hiding','Stealth','Wrestling'],
   'Imbuing': ['Arms Lore','Tinkering','Mysticism','Alchemy'],
@@ -636,8 +688,6 @@ const SKILL_INFO = {
     en:{def:'Assesses magical power and boosts the caster\'s own spell damage.', benefit:'Pairs directly with <b>Magery</b>, increasing offensive spell damage.'} },
   'Meditation': { pt:{def:'Permite recuperar mana mais rápido enquanto parado.', benefit:'Fundamental para qualquer conjurador (<b>Magery</b>, <b>Mysticism</b>, <b>Spellweaving</b>) manter o ritmo de magias.'},
     en:{def:'Lets you regenerate mana faster while standing still.', benefit:'Essential for any caster (<b>Magery</b>, <b>Mysticism</b>, <b>Spellweaving</b>) to keep casting at a good pace.'} },
-  'Focus': { pt:{def:'Aumenta a regeneração de stamina e potencializa golpes especiais de animais de estimação.', benefit:'Com <b>Meditation</b> e <b>Animal Taming</b>, mantém tanto o personagem quanto o pet com recursos plenos.'},
-    en:{def:'Increases stamina regeneration and boosts pet special-move effectiveness.', benefit:'With <b>Meditation</b> and <b>Animal Taming</b>, it keeps both the character and the pet topped up on resources.'} },
   'Chivalry': { pt:{def:'Magias de paladino movidas a karma em vez de mana.', benefit:'Combina bem com perícias de arma e <b>Tactics</b>, dando um mago-guerreiro sustentável sem gastar mana.'},
     en:{def:'Paladin spells powered by karma instead of mana.', benefit:'Pairs well with weapon skills and <b>Tactics</b>, giving a sustainable warrior-caster hybrid without spending mana.'} },
   'Necromancy': { pt:{def:'Magias sombrias que drenam vida e invocam mortos-vivos.', benefit:'Junto de <b>Spirit Speak</b> (fonte de mana) forma a base de qualquer necromante.'},
@@ -646,8 +696,8 @@ const SKILL_INFO = {
     en:{def:'Magic performed by "weaving" arcane focus with nature.', benefit:'Like any other magic school, it relies on <b>Meditation</b> and <b>Evaluate Intelligence</b> to sustain casting.'} },
   'Spirit Speak': { pt:{def:'Permite se comunicar com espíritos; é a fonte de mana da Necromancy.', benefit:'Obrigatória para qualquer necromante conjurar magias sombrias continuamente.'},
     en:{def:'Lets you commune with spirits; it is Necromancy\'s mana source.', benefit:'Required for any necromancer to cast dark spells continuously.'} },
-  'Mysticism': { pt:{def:'Escola de magia que mistura efeitos arcanos e curativos.', benefit:'Usa <b>Focus</b> e <b>Meditation</b> para sustentar o cast contínuo de feitiços.'},
-    en:{def:'A magic school blending arcane and healing effects.', benefit:'Relies on <b>Focus</b> and <b>Meditation</b> to sustain continuous spellcasting.'} },
+  'Mysticism': { pt:{def:'Escola de magia que mistura efeitos arcanos e curativos.', benefit:'Usa <b>Meditation</b> e <b>Evaluate Intelligence</b> para sustentar o cast contínuo de feitiços, e complementa <b>Imbuing</b>.'},
+    en:{def:'A magic school blending arcane and healing effects.', benefit:'Relies on <b>Meditation</b> and <b>Evaluate Intelligence</b> to sustain continuous spellcasting, and complements <b>Imbuing</b>.'} },
   'Bushido': { pt:{def:'Estilo de combate samurai que aumenta dano e permite bloquear com armas de duas mãos.', benefit:'Combina com <b>Parrying</b> e perícias de arma, sendo a base de builds de Samurai.'},
     en:{def:'Samurai fighting style that boosts damage and allows blocking with two-handed weapons.', benefit:'Pairs with <b>Parrying</b> and weapon skills, forming the core of Samurai builds.'} },
   'Ninjitsu': { pt:{def:'Técnicas ninja de furtividade, camuflagem e golpes especiais.', benefit:'Combina com <b>Hiding</b>/<b>Stealth</b> para ataques surpresa e com perícias de arma para golpes especiais únicos.'},
@@ -721,7 +771,7 @@ function categoryLabelOf(name){
 
 const PRESETS = {
   tamer: { labelKey:'presetTamer', stats:{str:55,dex:70,int:100},
-    skills:{'Animal Taming':100,'Animal Lore':100,'Veterinary':100,'Magery':100,'Meditation':100,'Focus':100,'Tracking':100,'Musicianship':50} },
+    skills:{'Animal Taming':100,'Animal Lore':100,'Veterinary':100,'Magery':100,'Meditation':100,'Tracking':100,'Musicianship':100,'Herding':50} },
   miner: { labelKey:'presetMiner', stats:{str:90,dex:50,int:85},
     skills:{'Mining':100,'Item Identification':100,'Blacksmithy':100,'Tinkering':100,'Arms Lore':100,'Lumberjacking':50,'Carpentry':100,'Camping':50} },
   worker: { labelKey:'presetWorker', stats:{str:100,dex:45,int:80},
@@ -735,7 +785,7 @@ const PRESETS = {
   thief: { labelKey:'presetThief', stats:{str:80,dex:100,int:45},
     skills:{'Stealing':100,'Hiding':100,'Stealth':100,'Snooping':100,'Lockpicking':100,'Detect Hidden':50,'Remove Trap':50,'Tactics':50,'Fencing':100} },
   dexxer: { labelKey:'presetDexxer', stats:{str:100,dex:100,int:25},
-    skills:{'Swordsmanship':100,'Tactics':100,'Anatomy':100,'Healing':100,'Parrying':100,'Chivalry':100,'Resisting Spells':50,'Focus':100} },
+    skills:{'Swordsmanship':100,'Tactics':100,'Anatomy':100,'Healing':100,'Parrying':100,'Chivalry':100,'Resisting Spells':100,'Wrestling':50} },
 };
 
 // ---------------- STATE ----------------
@@ -825,6 +875,13 @@ strRange.addEventListener('input', e => onStatInput('str', e.target.value));
 dexRange.addEventListener('input', e => onStatInput('dex', e.target.value));
 intRange.addEventListener('input', e => onStatInput('int', e.target.value));
 
+function computeResources(){
+  const life = Math.floor((stats.str + stats.dex + stats.int) / 2.25);
+  const mana = Math.floor((stats.int * 3 + stats.str) / 4);
+  const stamina = Math.floor((stats.dex * 3 + stats.str) / 4);
+  return {life, mana, stamina};
+}
+
 function refreshStatsUI(){
   const mx = statMax();
   [strRange,dexRange,intRange].forEach(r => r.max = mx);
@@ -838,9 +895,7 @@ function refreshStatsUI(){
   statCapHint.textContent = t('capHintStat',{cap:CONFIG.statCap});
 
   // Derived resources
-  const life = Math.floor((stats.str + stats.dex + stats.int) / 2.25);
-  const mana = Math.floor((stats.int * 3 + stats.str) / 4);
-  const stamina = Math.floor((stats.dex * 3 + stats.str) / 4);
+  const {life, mana, stamina} = computeResources();
   lifeVal.textContent = life;
   manaVal.textContent = mana;
   staminaVal.textContent = stamina;
@@ -1034,6 +1089,110 @@ function flashMsg(id,text){
   setTimeout(() => { if(el.textContent===text) el.textContent=''; }, 3500);
 }
 
+// ---------------- EXPORT AS IMAGE ----------------
+function populateExportCard(){
+  const card = document.getElementById('exportCard');
+  const {life, mana, stamina} = computeResources();
+  const statTotal = stats.str + stats.dex + stats.int;
+  const statRemaining = CONFIG.statCap - statTotal;
+  const skillTotal = totalSkillPoints();
+  const skillRemaining = CONFIG.skillCap - skillTotal;
+  const buildNameVal = document.getElementById('buildName').value.trim();
+  const dateStr = new Date().toLocaleString(currentLang==='pt' ? 'pt-BR' : 'en-US');
+
+  const statStatusHtml = statRemaining === 0
+    ? `<div class="ec-status complete">${t('ecStatusComplete')}</div>`
+    : `<div class="ec-status missing">${t('ecStatusMissingStat',{n:statRemaining})}</div>`;
+  const skillStatusHtml = skillRemaining === 0
+    ? `<div class="ec-status complete">${t('ecStatusComplete')}</div>`
+    : `<div class="ec-status missing">${t('ecStatusMissingSkill',{n:skillRemaining})}</div>`;
+
+  let skillsHtml = '';
+  const usedByCat = SKILL_CATEGORIES.map(cat => ({
+    label: t(cat.labelKey),
+    items: cat.skills.filter(s => skillVals[s] > 0).sort((a,b) => skillVals[b]-skillVals[a])
+  })).filter(c => c.items.length > 0);
+
+  if(usedByCat.length === 0){
+    skillsHtml = `<div class="ec-empty">${t('ecNoSkills')}</div>`;
+  } else {
+    skillsHtml = usedByCat.map(cat => `
+      <div class="ec-cat">
+        <h4>${cat.label}</h4>
+        <div class="ec-skill-grid">
+          ${cat.items.map(s => `<div class="ec-skill-item"><span>${s}</span><span class="v">${skillVals[s]}</span></div>`).join('')}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  card.innerHTML = `
+    <div class="ec-header">
+      <div>
+        <p class="ec-title">${buildNameVal || t('title')}</p>
+        <p class="ec-sub">${t('ecSubtitle')} — Ultima Online</p>
+      </div>
+      <div class="ec-date">${t('ecGeneratedOn',{date:dateStr})}<br>${t('statCapLabel')}: ${CONFIG.statCap} · ${t('skillCapLabel')}: ${CONFIG.skillCap}</div>
+    </div>
+    <div class="ec-grid">
+      <div class="ec-box">
+        <h3>${t('ecAttributes')}</h3>
+        <div class="ec-stat-row"><span class="k">${t('strLabel')}</span><span class="v">${stats.str}</span></div>
+        <div class="ec-stat-row"><span class="k">${t('dexLabel')}</span><span class="v">${stats.dex}</span></div>
+        <div class="ec-stat-row"><span class="k">${t('intLabel')}</span><span class="v">${stats.int}</span></div>
+        <div class="ec-stat-row"><span class="k">${t('ecTotal')}</span><span class="v">${statTotal} / ${CONFIG.statCap}</span></div>
+        ${statStatusHtml}
+        <div class="ec-resources">
+          <div class="ec-res-box"><div class="rl">${t('lifeLabel')}</div><div class="rv">${life}</div></div>
+          <div class="ec-res-box"><div class="rl">${t('manaLabel')}</div><div class="rv">${mana}</div></div>
+          <div class="ec-res-box"><div class="rl">${t('staminaLabel')}</div><div class="rv">${stamina}</div></div>
+        </div>
+      </div>
+      <div class="ec-box">
+        <h3>${t('skillsHeader')}</h3>
+        <div class="ec-stat-row"><span class="k">${t('ecSkillsTotal')}</span><span class="v">${skillTotal} / ${CONFIG.skillCap}</span></div>
+        ${skillStatusHtml}
+      </div>
+    </div>
+    <div class="ec-skills-box">
+      ${skillsHtml}
+    </div>
+    <div class="ec-footer">${t('ecFooter')}</div>
+  `;
+}
+
+async function exportBuildImage(){
+  const btn = document.getElementById('exportImgBtn');
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = t('exportGenerating');
+  try{
+    populateExportCard();
+    if(document.fonts && document.fonts.ready){ await document.fonts.ready; }
+    await new Promise(r => setTimeout(r, 60));
+    const card = document.getElementById('exportCard');
+    const canvas = await html2canvas(card, { backgroundColor:'#0a0e17', scale:2, useCORS:true });
+    await new Promise(resolve => {
+      canvas.toBlob(blob => {
+        if(!blob){ resolve(); return; }
+        const url = URL.createObjectURL(blob);
+        const nameSlug = (document.getElementById('buildName').value.trim() || 'build').toLowerCase().replace(/[^a-z0-9]+/g,'-');
+        const a = document.createElement('a');
+        a.href = url; a.download = `uo-build-${nameSlug}.png`;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        resolve();
+      });
+    });
+  }catch(err){
+    flashMsg('saveMsg', t('exportError'));
+  }finally{
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+}
+document.getElementById('exportImgBtn').addEventListener('click', exportBuildImage);
+
 // ---------------- SAVE / LOAD (persistent, per-user) ----------------
 const savedListEl=document.getElementById('savedList');
 async function refreshSavedList(){
@@ -1110,5 +1269,9 @@ document.getElementById('langEn').addEventListener('click', () => applyLanguage(
 // ---------------- INIT ----------------
 applyLanguage('pt');
 </script>
+  <div class="export-offscreen">
+    <div class="export-card" id="exportCard"></div>
+  </div>
+
 </body>
 </html>
