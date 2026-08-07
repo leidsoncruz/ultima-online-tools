@@ -1328,17 +1328,17 @@
         <h2><span class="bar"></span> <span data-i18n="attributesHeader">Attributes</span> <span class="cap-hint"
             id="statCapHint">cap 225</span></h2>
         <div class="stat-row">
-          <label><span data-i18n="strLabel">Strength (STR)</span> <span class="val mono" id="strVal">10</span></label>
-          <input type="range" id="strRange" min="10" max="205" value="10">
+          <label><span data-i18n="strLabel">Strength (STR)</span> <span class="val mono" id="strVal">0</span></label>
+          <input type="range" id="strRange" min="0" max="205" value="0">
         </div>
         <div class="stat-row">
-          <label><span data-i18n="dexLabel">Dexterity (DEX)</span> <span class="val mono" id="dexVal">10</span></label>
-          <input type="range" id="dexRange" min="10" max="205" value="10">
+          <label><span data-i18n="dexLabel">Dexterity (DEX)</span> <span class="val mono" id="dexVal">0</span></label>
+          <input type="range" id="dexRange" min="0" max="205" value="0">
         </div>
         <div class="stat-row">
           <label><span data-i18n="intLabel">Intelligence (INT)</span> <span class="val mono"
-              id="intVal">10</span></label>
-          <input type="range" id="intRange" min="10" max="205" value="10">
+              id="intVal">0</span></label>
+          <input type="range" id="intRange" min="0" max="205" value="0">
         </div>
         <div class="bigbar">
           <div id="statBarFill" style="width:13%"></div>
@@ -1466,7 +1466,7 @@
     // ---------------- CONFIG ----------------
     let CONFIG = {statCap: 225, skillCap: 750, maxSkill: 100, maxStat: 100};
     const DEFAULT_CONFIG = {statCap: 225, skillCap: 750, maxSkill: 100, maxStat: 100};
-    const STAT_MIN = 10;
+    const STAT_MIN = 0;
 
     // ---------------- I18N ----------------
     let currentLang = 'pt';
@@ -2010,7 +2010,7 @@
 
 
     // ---------------- STATE ----------------
-    let stats = {str: 10, dex: 10, int: 10};
+    let stats = {str: 0, dex: 0, int: 0};
     let skillVals = {}; ALL_SKILLS.forEach(s => skillVals[s] = 0);
     let activeTab = SKILL_CATEGORIES[0].key;
     let searchTerm = '';
@@ -2124,7 +2124,7 @@
       return newVal;
     }
     function onStatInput(field, value) {
-      stats[field] = clampStat(field, parseInt(value, 10) || STAT_MIN);
+      stats[field] = clampStat(field, parseInt(value, 0) || STAT_MIN);
       refreshStatsUI();
       document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
     }
