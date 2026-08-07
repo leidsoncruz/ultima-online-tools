@@ -253,11 +253,145 @@
     }
 
     /* ---------------- PRESETS ---------------- */
+    .preset-source-note {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin: 8px 0 10px;
+      font-style: italic;
+    }
+
+    .preset-groups {
+      margin-bottom: 16px;
+    }
+
+    .preset-group {
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      margin-bottom: 10px;
+    }
+
+    .preset-group summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 600;
+      font-size: 13.5px;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+      color: var(--gold-bright);
+      background: var(--panel-2);
+      border-radius: var(--r-md) var(--r-md) 0 0;
+    }
+
+    .preset-group:not([open]) summary {
+      border-radius: var(--r-md);
+    }
+
+    .preset-group summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .preset-group summary::before {
+      content: '▸';
+      display: inline-block;
+      margin-right: 8px;
+      color: var(--teal);
+      transition: transform .15s ease;
+    }
+
+    .preset-group[open] summary::before {
+      transform: rotate(90deg);
+    }
+
+    .preset-group-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      font-weight: 400;
+      color: var(--text-dim);
+      background: rgba(255, 255, 255, .06);
+      border-radius: var(--r-pill);
+      padding: 2px 8px;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .preset-group>.preset-source-note {
+      padding: 8px 14px 0;
+      margin: 0;
+    }
+
+    .preset-group>.preset-grid {
+      padding: 12px 14px 14px;
+      margin-bottom: 0;
+    }
+
     .preset-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
       margin-bottom: 16px;
+    }
+
+    .preset-item {
+      display: flex;
+      gap: 4px;
+    }
+
+    .preset-item .preset-btn {
+      flex: 1;
+    }
+
+    .preset-store-link {
+      position: relative;
+      flex-shrink: 0;
+      width: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--panel-2);
+      border: 1px solid var(--border-bright);
+      border-radius: var(--r-sm);
+      text-decoration: none;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .preset-store-link:hover {
+      border-color: var(--gold);
+      background: rgba(224, 178, 58, .12);
+    }
+
+    .preset-store-link::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      background: var(--bg-2);
+      color: var(--text);
+      border: 1px solid var(--border-bright);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 11px;
+      width: max-content;
+      max-width: 190px;
+      white-space: normal;
+      text-align: center;
+      line-height: 1.35;
+      opacity: 0;
+      transform: translateX(-50%) translateY(4px);
+      pointer-events: none;
+      transition: opacity .15s ease, transform .15s ease;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, .5);
+      z-index: 30;
+    }
+
+    .preset-store-link:hover::after {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
     }
 
     .preset-btn {
@@ -775,8 +909,8 @@
       display: block;
       width: 100%;
       height: auto;
-      /* max-height: 220px; */
-      object-fit: fit;
+      max-height: 220px;
+      object-fit: cover;
       object-position: center;
       transition: transform .35s ease, filter .35s ease;
     }
@@ -1137,7 +1271,7 @@
 
 <body>
 
-  <!--<a href="https://auroriashard.com.br/" target="_blank" rel="noopener" class="shard-header-img-wrap"
+  <!-- <a href="https://auroriashard.com.br/" target="_blank" rel="noopener" class="shard-header-img-wrap"
     aria-label="Auroria Shard — auroriashard.com.br">
     <img src="./assets/auroria-header.png" alt="Auroria Shard — o servidor brasileiro mais completo de Ultima Online"
       class="shard-header-img" loading="lazy">
@@ -1172,7 +1306,7 @@
 
       <div class="panel">
         <h2><span class="bar"></span> <span data-i18n="presetsHeader">Ready-made Builds</span></h2>
-        <div class="preset-grid" id="presetGrid"></div>
+        <div class="preset-groups" id="presetGrid"></div>
         <div class="util-row" style="flex-wrap:wrap;">
           <button class="util-btn" id="resetBtn" data-i18n="resetAll">Reset All</button>
           <button class="util-btn accent" id="copyBtn" data-i18n="copyBuild">Copy Build</button>
@@ -1354,7 +1488,14 @@
         relatedLabel: 'Perícias Relacionadas (sugestões)', relatedTo: 'Relacionado a: {list}', viaLabel: 'via {trigger}',
         shardDisclaimer: 'As descrições e sinergias abaixo seguem as mecânicas padrão da Ultima Online (OSI) como referência geral. Seu shard pode implementar as coisas de forma diferente, rebalancear bônus ou nem usar certas perícias — por exemplo, Ninjitsu não é usada em alguns shards, como o Aurora. Sempre confira as regras específicas do seu shard.',
         catAnimal: 'Animais', catBardic: 'Bardo', catCombat: 'Combate', catMagic: 'Magia', catCrafting: 'Ofícios', catGathering: 'Coleta & Saber', catStealth: 'Furtividade', catMisc: 'Diversos',
+        presetGroupGeneric: 'Builds Genéricos', presetGroupOfficial: 'Builds Oficiais (Loja Auroria)',
         presetTamer: 'Tamer (Mago)', presetMiner: 'Minerador/Ferreiro', presetWorker: 'Full Worker', presetMageWarrior: 'Mago Guerreiro', presetStealthArcher: 'Arqueiro Furtivo', presetBard: 'Bardo Provo/Paz', presetThief: 'Ladrão', presetDexxer: 'Dexxer PvP',
+        presetsSourceNote: 'Builds baseados nos Livros de Skills da loja oficial do Auroria Shard.', viewInStore: '🛒 Comprar o Livro de Skills {sku} na loja oficial',
+        presetCH01: 'Mago 1', presetCH02: 'Mago 2', presetCH03: 'Mago 3', presetCH04: 'Mago 4', presetCH05: 'Domador', presetCH06: 'Trabalhador',
+        presetCH07: 'Warlock Esgrimista', presetCH08: 'Warlock Machados', presetCH09: 'Tank Esgrimista', presetCH11: 'Tank Espadachim',
+        presetCH12: 'Ladino', presetCH13: 'Arqueiro', presetCH14: 'T-Hunter', presetCH15: 'Pure Mage Hider', presetCH16: 'Pure Mage Tracker',
+        presetCH17: 'Lumber-Archery', presetCH18: 'Fencing-Archery A', presetCH19: 'Fencing-Archery B',
+        presetCH20: 'Macer Mining Warlock', presetCH21: 'Macer Mining Mage', presetCH22: 'Wrestling + Arms Lore',
       },
       en: {
         title: 'Character Forge', subtitle: 'Ultima Online — plan your stats and skills before setting out into Britannia',
@@ -1382,7 +1523,14 @@
         relatedLabel: 'Related Skills (suggestions)', relatedTo: 'Related to: {list}', viaLabel: 'via {trigger}',
         shardDisclaimer: 'Descriptions and synergies below follow standard Ultima Online (OSI) mechanics as a general reference. Your shard may implement things differently, rebalance bonuses, or not use certain skills at all — for example, Ninjitsu isn\'t used on some shards, such as Aurora. Always check your shard\'s own rules.',
         catAnimal: 'Animals', catBardic: 'Bardic', catCombat: 'Combat', catMagic: 'Magic', catCrafting: 'Crafting', catGathering: 'Gathering & Lore', catStealth: 'Stealth', catMisc: 'Misc',
+        presetGroupGeneric: 'Generic Builds', presetGroupOfficial: 'Official Builds (Auroria Store)',
         presetTamer: 'Tamer (Mage)', presetMiner: 'Miner/Blacksmith', presetWorker: 'Full Worker', presetMageWarrior: 'Battle Mage', presetStealthArcher: 'Stealth Archer', presetBard: 'Bard (Provo/Peace)', presetThief: 'Thief', presetDexxer: 'PvP Dexxer',
+        presetsSourceNote: 'Builds based on the Auroria Shard official store Skill Books.', viewInStore: '🛒 Buy the {sku} Skill Book in the official store',
+        presetCH01: 'Mage 1', presetCH02: 'Mage 2', presetCH03: 'Mage 3', presetCH04: 'Mage 4', presetCH05: 'Tamer', presetCH06: 'Worker',
+        presetCH07: 'Warlock Fencer', presetCH08: 'Warlock Axeman', presetCH09: 'Tank Fencer', presetCH11: 'Tank Swordsman',
+        presetCH12: 'Rogue', presetCH13: 'Archer', presetCH14: 'T-Hunter', presetCH15: 'Pure Mage Hider', presetCH16: 'Pure Mage Tracker',
+        presetCH17: 'Lumber-Archery', presetCH18: 'Fencing-Archery A', presetCH19: 'Fencing-Archery B',
+        presetCH20: 'Macer Mining Warlock', presetCH21: 'Macer Mining Mage', presetCH22: 'Wrestling + Arms Lore',
       }
     };
     function t(key, vars = {}) {
@@ -1719,40 +1867,138 @@
       return cat ? t(cat.labelKey) : '';
     }
 
-    const PRESETS = {
-      tamer: {
-        labelKey: 'presetTamer', stats: {str: 55, dex: 70, int: 100},
-        skills: {'Animal Taming': 100, 'Animal Lore': 100, 'Veterinary': 100, 'Magery': 100, 'Meditation': 100, 'Tracking': 100, 'Musicianship': 100, 'Herding': 50}
+    const PRESET_GROUPS = [
+      {
+        key: 'generic', labelKey: 'presetGroupGeneric', noteKey: null,
+        presets: {
+          tamer: {
+            labelKey: 'presetTamer', stats: {str: 55, dex: 70, int: 100},
+            skills: {'Animal Taming': 100, 'Animal Lore': 100, 'Veterinary': 100, 'Magery': 100, 'Meditation': 100, 'Tracking': 100, 'Musicianship': 100, 'Herding': 50}
+          },
+          miner: {
+            labelKey: 'presetMiner', stats: {str: 90, dex: 50, int: 85},
+            skills: {'Mining': 100, 'Item Identification': 100, 'Blacksmithy': 100, 'Tinkering': 100, 'Arms Lore': 100, 'Lumberjacking': 50, 'Carpentry': 100, 'Camping': 50}
+          },
+          worker: {
+            labelKey: 'presetWorker', stats: {str: 100, dex: 45, int: 80},
+            skills: {'Mining': 75, 'Lumberjacking': 75, 'Blacksmithy': 75, 'Tailoring': 75, 'Carpentry': 75, 'Tinkering': 75, 'Cooking': 75, 'Bowcraft/Fletching': 75, 'Alchemy': 75, 'Inscription': 75}
+          },
+          magewarrior: {
+            labelKey: 'presetMageWarrior', stats: {str: 90, dex: 45, int: 90},
+            skills: {'Magery': 100, 'Evaluate Intelligence': 100, 'Meditation': 100, 'Resisting Spells': 100, 'Swordsmanship': 100, 'Tactics': 100, 'Anatomy': 100, 'Healing': 50}
+          },
+          stealtharcher: {
+            labelKey: 'presetStealthArcher', stats: {str: 80, dex: 100, int: 45},
+            skills: {'Archery': 100, 'Tactics': 100, 'Anatomy': 100, 'Healing': 100, 'Hiding': 100, 'Stealth': 100, 'Ninjitsu': 50, 'Resisting Spells': 100}
+          },
+          bard: {
+            labelKey: 'presetBard', stats: {str: 50, dex: 90, int: 85},
+            skills: {'Musicianship': 100, 'Provocation': 100, 'Peacemaking': 100, 'Fencing': 100, 'Tactics': 100, 'Anatomy': 100, 'Healing': 100, 'Resisting Spells': 50}
+          },
+          thief: {
+            labelKey: 'presetThief', stats: {str: 80, dex: 100, int: 45},
+            skills: {'Stealing': 100, 'Hiding': 100, 'Stealth': 100, 'Snooping': 100, 'Lockpicking': 100, 'Detect Hidden': 50, 'Remove Trap': 50, 'Tactics': 50, 'Fencing': 100}
+          },
+          dexxer: {
+            labelKey: 'presetDexxer', stats: {str: 100, dex: 100, int: 25},
+            skills: {'Swordsmanship': 100, 'Tactics': 100, 'Anatomy': 100, 'Healing': 100, 'Parrying': 100, 'Chivalry': 100, 'Resisting Spells': 100, 'Wrestling': 50}
+          },
+        }
       },
-      miner: {
-        labelKey: 'presetMiner', stats: {str: 90, dex: 50, int: 85},
-        skills: {'Mining': 100, 'Item Identification': 100, 'Blacksmithy': 100, 'Tinkering': 100, 'Arms Lore': 100, 'Lumberjacking': 50, 'Carpentry': 100, 'Camping': 50}
+      {
+        key: 'official', labelKey: 'presetGroupOfficial', noteKey: 'presetsSourceNote',
+        presets: {
+          CH01: {
+            labelKey: 'presetCH01', sku: 'CH01', stats: {str: 55, dex: 70, int: 100},
+            skills: {'Magery': 100, 'Evaluate Intelligence': 100, 'Meditation': 100, 'Inscription': 100, 'Resisting Spells': 100, 'Wrestling': 100, 'Hiding': 100, 'Tracking': 50}
+          },
+          CH02: {
+            labelKey: 'presetCH02', sku: 'CH02', stats: {str: 55, dex: 70, int: 100},
+            skills: {'Magery': 100, 'Evaluate Intelligence': 100, 'Meditation': 100, 'Inscription': 100, 'Resisting Spells': 100, 'Mace Fighting': 100, 'Tactics': 100, 'Anatomy': 50}
+          },
+          CH03: {
+            labelKey: 'presetCH03', sku: 'CH03', stats: {str: 55, dex: 70, int: 100},
+            skills: {'Magery': 100, 'Evaluate Intelligence': 100, 'Meditation': 100, 'Resisting Spells': 100, 'Inscription': 100, 'Hiding': 100, 'Mace Fighting': 100, 'Tactics': 50}
+          },
+          CH04: {
+            labelKey: 'presetCH04', sku: 'CH04', stats: {str: 60, dex: 65, int: 100},
+            skills: {'Magery': 100, 'Evaluate Intelligence': 100, 'Meditation': 100, 'Mace Fighting': 100, 'Tactics': 100, 'Resisting Spells': 100, 'Anatomy': 100, 'Inscription': 50}
+          },
+          CH05: {
+            labelKey: 'presetCH05', sku: 'CH05', stats: {str: 55, dex: 70, int: 100},
+            skills: {'Animal Taming': 100, 'Animal Lore': 100, 'Tracking': 100, 'Magery': 100, 'Evaluate Intelligence': 100, 'Wrestling': 100, 'Resisting Spells': 90, 'Meditation': 60}
+          },
+          CH06: {
+            labelKey: 'presetCH06', sku: 'CH06', stats: {str: 100, dex: 45, int: 80},
+            skills: {'Blacksmithy': 100, 'Arms Lore': 100, 'Mining': 100, 'Tinkering': 100, 'Tailoring': 100, 'Carpentry': 100, 'Magery': 80, 'Hiding': 70}
+          },
+          CH07: {
+            labelKey: 'presetCH07', sku: 'CH07', stats: {str: 90, dex: 45, int: 90},
+            skills: {'Fencing': 100, 'Tactics': 100, 'Anatomy': 100, 'Magery': 100, 'Parrying': 100, 'Resisting Spells': 100, 'Healing': 90, 'Meditation': 60}
+          },
+          CH08: {
+            labelKey: 'presetCH08', sku: 'CH08', stats: {str: 90, dex: 45, int: 90},
+            skills: {'Swordsmanship': 100, 'Lumberjacking': 100, 'Tactics': 100, 'Anatomy': 100, 'Healing': 100, 'Resisting Spells': 100, 'Magery': 90, 'Meditation': 60}
+          },
+          CH09: {
+            labelKey: 'presetCH09', sku: 'CH09', stats: {str: 90, dex: 45, int: 90},
+            skills: {'Fencing': 100, 'Evaluate Intelligence': 100, 'Tactics': 100, 'Anatomy': 100, 'Magery': 100, 'Resisting Spells': 100, 'Healing': 80, 'Meditation': 70}
+          },
+          CH11: {
+            labelKey: 'presetCH11', sku: 'CH11', stats: {str: 90, dex: 45, int: 90},
+            skills: {'Magery': 100, 'Evaluate Intelligence': 100, 'Resisting Spells': 100, 'Swordsmanship': 100, 'Tactics': 100, 'Anatomy': 100, 'Healing': 80, 'Meditation': 70}
+          },
+          CH12: {
+            labelKey: 'presetCH12', sku: 'CH12', stats: {str: 40, dex: 100, int: 85},
+            skills: {'Stealing': 100, 'Snooping': 100, 'Hiding': 100, 'Stealth': 100, 'Magery': 100, 'Evaluate Intelligence': 100, 'Detect Hidden': 80, 'Meditation': 70}
+          },
+          CH13: {
+            labelKey: 'presetCH13', sku: 'CH13', stats: {str: 70, dex: 100, int: 55},
+            skills: {'Archery': 100, 'Tactics': 100, 'Anatomy': 100, 'Meditation': 100, 'Magery': 100, 'Evaluate Intelligence': 100, 'Resisting Spells': 100, 'Inscription': 50}
+          },
+          CH14: {
+            labelKey: 'presetCH14', sku: 'CH14', stats: {str: 70, dex: 75, int: 80},
+            skills: {'Cartography': 100, 'Lockpicking': 100, 'Musicianship': 100, 'Peacemaking': 100, 'Provocation': 100, 'Magery': 100, 'Fishing': 100, 'Mining': 50}
+          },
+          CH15: {
+            labelKey: 'presetCH15', sku: 'CH15', stats: {str: 40, dex: 85, int: 100},
+            skills: {'Magery': 100, 'Evaluate Intelligence': 100, 'Meditation': 100, 'Resisting Spells': 100, 'Inscription': 100, 'Stealth': 100, 'Hiding': 100, 'Tracking': 50}
+          },
+          CH16: {
+            labelKey: 'presetCH16', sku: 'CH16', stats: {str: 40, dex: 85, int: 100},
+            skills: {'Magery': 100, 'Evaluate Intelligence': 100, 'Meditation': 100, 'Resisting Spells': 100, 'Inscription': 100, 'Tracking': 100, 'Detect Hidden': 100, 'Hiding': 50}
+          },
+          CH17: {
+            labelKey: 'presetCH17', sku: 'CH17', stats: {str: 85, dex: 90, int: 50},
+            skills: {'Swordsmanship': 100, 'Lumberjacking': 100, 'Tactics': 100, 'Anatomy': 100, 'Archery': 100, 'Resisting Spells': 90, 'Healing': 90, 'Magery': 70}
+          },
+          CH18: {
+            labelKey: 'presetCH18', sku: 'CH18', stats: {str: 75, dex: 100, int: 50},
+            skills: {'Fencing': 100, 'Tactics': 100, 'Anatomy': 100, 'Archery': 100, 'Parrying': 100, 'Resisting Spells': 90, 'Healing': 90, 'Magery': 70}
+          },
+          CH19: {
+            labelKey: 'presetCH19', sku: 'CH19', stats: {str: 60, dex: 90, int: 75},
+            skills: {'Fencing': 100, 'Tactics': 100, 'Anatomy': 100, 'Archery': 100, 'Magery': 100, 'Resisting Spells': 100, 'Healing': 100, 'Meditation': 50}
+          },
+          CH20: {
+            labelKey: 'presetCH20', sku: 'CH20', stats: {str: 100, dex: 35, int: 90},
+            skills: {'Mace Fighting': 100, 'Mining': 100, 'Tactics': 100, 'Anatomy': 100, 'Meditation': 50, 'Resisting Spells': 100, 'Healing': 100, 'Magery': 100}
+          },
+          CH21: {
+            labelKey: 'presetCH21', sku: 'CH21', stats: {str: 90, dex: 35, int: 100},
+            skills: {'Mace Fighting': 100, 'Mining': 100, 'Tactics': 100, 'Anatomy': 100, 'Meditation': 50, 'Resisting Spells': 100, 'Evaluate Intelligence': 100, 'Magery': 100}
+          },
+          CH22: {
+            labelKey: 'presetCH22', sku: 'CH22', stats: {str: 50, dex: 85, int: 90},
+            skills: {'Wrestling': 100, 'Magery': 100, 'Evaluate Intelligence': 100, 'Resisting Spells': 100, 'Meditation': 100, 'Inscription': 100, 'Arms Lore': 100, 'Parrying': 50}
+          },
+        }
       },
-      worker: {
-        labelKey: 'presetWorker', stats: {str: 100, dex: 45, int: 80},
-        skills: {'Mining': 75, 'Lumberjacking': 75, 'Blacksmithy': 75, 'Tailoring': 75, 'Carpentry': 75, 'Tinkering': 75, 'Cooking': 75, 'Bowcraft/Fletching': 75, 'Alchemy': 75, 'Inscription': 75}
-      },
-      magewarrior: {
-        labelKey: 'presetMageWarrior', stats: {str: 90, dex: 45, int: 90},
-        skills: {'Magery': 100, 'Evaluate Intelligence': 100, 'Meditation': 100, 'Resisting Spells': 100, 'Swordsmanship': 100, 'Tactics': 100, 'Anatomy': 100, 'Healing': 50}
-      },
-      stealtharcher: {
-        labelKey: 'presetStealthArcher', stats: {str: 80, dex: 100, int: 45},
-        skills: {'Archery': 100, 'Tactics': 100, 'Anatomy': 100, 'Healing': 100, 'Hiding': 100, 'Stealth': 100, 'Ninjitsu': 50, 'Resisting Spells': 100}
-      },
-      bard: {
-        labelKey: 'presetBard', stats: {str: 50, dex: 90, int: 85},
-        skills: {'Musicianship': 100, 'Provocation': 100, 'Peacemaking': 100, 'Fencing': 100, 'Tactics': 100, 'Anatomy': 100, 'Healing': 100, 'Resisting Spells': 50}
-      },
-      thief: {
-        labelKey: 'presetThief', stats: {str: 80, dex: 100, int: 45},
-        skills: {'Stealing': 100, 'Hiding': 100, 'Stealth': 100, 'Snooping': 100, 'Lockpicking': 100, 'Detect Hidden': 50, 'Remove Trap': 50, 'Tactics': 50, 'Fencing': 100}
-      },
-      dexxer: {
-        labelKey: 'presetDexxer', stats: {str: 100, dex: 100, int: 25},
-        skills: {'Swordsmanship': 100, 'Tactics': 100, 'Anatomy': 100, 'Healing': 100, 'Parrying': 100, 'Chivalry': 100, 'Resisting Spells': 100, 'Wrestling': 50}
-      },
-    };
+    ];
+    // Flat lookup used by applyPreset() regardless of which group a key belongs to.
+    const PRESETS = Object.assign({}, ...PRESET_GROUPS.map(g => g.presets));
+
+
 
     // ---------------- STATE ----------------
     let stats = {str: 10, dex: 10, int: 10};
@@ -1780,11 +2026,47 @@
     // ---------------- BUILD PRESET BUTTONS ----------------
     function buildPresetButtons() {
       presetGrid.innerHTML = '';
-      Object.entries(PRESETS).forEach(([key, p]) => {
-        const btn = document.createElement('button');
-        btn.className = 'preset-btn'; btn.textContent = t(p.labelKey); btn.dataset.key = key;
-        btn.addEventListener('click', () => applyPreset(key));
-        presetGrid.appendChild(btn);
+      PRESET_GROUPS.forEach((group, gi) => {
+        const details = document.createElement('details');
+        details.className = 'preset-group';
+        details.open = group.key === 'official'; // official Auroria builds start expanded
+
+        const summary = document.createElement('summary');
+        const count = Object.keys(group.presets).length;
+        summary.innerHTML = `<span>${t(group.labelKey)}</span><span class="preset-group-count">${count}</span>`;
+        details.appendChild(summary);
+
+        if (group.noteKey) {
+          const note = document.createElement('p');
+          note.className = 'preset-source-note';
+          note.textContent = t(group.noteKey);
+          details.appendChild(note);
+        }
+
+        const grid = document.createElement('div');
+        grid.className = 'preset-grid';
+        Object.entries(group.presets).forEach(([key, p]) => {
+          const item = document.createElement('div');
+          item.className = 'preset-item';
+          const btn = document.createElement('button');
+          btn.className = 'preset-btn'; btn.textContent = t(p.labelKey); btn.dataset.key = key;
+          btn.addEventListener('click', () => applyPreset(key));
+          item.appendChild(btn);
+          if (p.sku) {
+            const link = document.createElement('a');
+            link.className = 'preset-store-link';
+            link.href = `https://loja.auroriashard.com.br/produtos?sku=${p.sku}`;
+            link.target = '_blank'; link.rel = 'noopener';
+            link.setAttribute('aria-label', t('viewInStore', {sku: p.sku}));
+            link.dataset.tooltip = t('viewInStore', {sku: p.sku});
+            link.textContent = '🛒';
+            link.addEventListener('click', e => e.stopPropagation());
+            item.appendChild(link);
+          }
+          grid.appendChild(item);
+        });
+        details.appendChild(grid);
+        presetGrid.appendChild(details);
       });
     }
 
