@@ -134,8 +134,8 @@ button{border:1px solid transparent;border-radius:9px;padding:10px 14px;font:700
   </div>
 </main>
 <footer class="footer">
-  <div>Criado por <strong>Leidson Cruz</strong> · <a href="https://github.com/leidsoncruz" target="_blank" rel="noopener noreferrer">@leidsoncruz</a></div>
-  <div style="margin-top:4px">Feito para a comunidade de Ultima Online · Pensado para o servidor <a href="https://auroriashard.com.br/" target="_blank" rel="noopener noreferrer">Auroria</a></div>
+  <div>Criado por <strong>O_TEU_NOME</strong> e <a href="https://github.com/leidsoncruz" target="_blank" rel="noopener noreferrer">@leidsoncruz</a> · <a href="https://github.com/leidsoncruz" target="_blank" rel="noopener noreferrer">GitHub</a></div>
+  <div style="margin-top:4px">Feito para a comunidade de Ultima Online · Pensado para o servidor <a href="https://auroriashard.com.br/" target="_blank" rel="noopener noreferrer">Auroria</a> · Não é afiliado ao jogo nem ao servidor.</div>
 </footer>
 
 <!-- ANIMAÇÃO DO BAÚ -->
@@ -320,24 +320,41 @@ button{border:1px solid transparent;border-radius:9px;padding:10px 14px;font:700
       if(!window.Peer){ reject(new Error('A biblioteca de ligação não carregou. Verifica a ligação à internet.')); return; }
       peer=new Peer(id || undefined,{debug:0});
       peer.on('open',resolve);
-      peer.on('error',e=>{ setStatus('Erro de ligação'); reject(e); });
+      peer.on('error',e=>{ console.error('PeerJS error:',e); setStatus('Erro de ligação'); reject(e); });
       peer.on('connection',conn=>{ conn.on('open',()=>{connections.set(conn.peer,conn); conn.on('data',d=>handleData(d,conn)); conn.on('close',()=>{connections.delete(conn.peer);}); }); });
     });
   }
   function dropPeer(){ try{ if(peer) peer.destroy(); }catch(e){} peer=null; }
 
+  function peerErrorMsg(e){
+    const t = e && e.type;
+    if((e && e.message==='timeout') || ['network','server-error','socket-error','socket-closed'].includes(t))
+      return 'Não foi possível contactar o servidor de sinalização (PeerJS). Verifica a ligação à internet, desativa VPN/bloqueadores e tenta novamente.';
+    if(t==='browser-incompatible') return 'Este browser não suporta WebRTC.';
+    return (e && e.message) || String(e);
+  }
+  const withTimeout = (p, ms) => { let t; return Promise.race([p, new Promise((_,rej)=>{ t=setTimeout(()=>rej(new Error('timeout')),ms); })]).finally(()=>clearTimeout(t)); };
+
   $('hostBtn').onclick=async()=>{
     $('hostBtn').disabled=true; $('joinBtn').disabled=true; landingMsg('A criar sessão…');
-    try{
-      isHost=true; roomCode=uid(); await initPeer('uo-loot-'+roomCode.toLowerCase());
-      hostPeerId=peer.id; setStatus('Sessão criada',true);
-      setRoomInfo(`Código: ${roomCode} · Partilha este código com o grupo. O anfitrião tem de manter esta página aberta.`);
-      showApp(); sync();
-    }catch(e){
-      isHost=false; dropPeer();
-      landingMsg('Não foi possível criar a sessão: '+(e.message||e), true);
-      $('hostBtn').disabled=false; $('joinBtn').disabled=false;
+    let lastErr = null;
+    for(let attempt=0; attempt<3; attempt++){
+      try{
+        isHost=true; roomCode=uid();
+        await withTimeout(initPeer('uo-loot-'+roomCode.toLowerCase()), 10000);
+        hostPeerId=peer.id; setStatus('Sessão criada',true);
+        setRoomInfo(`Código: ${roomCode} · Partilha este código com o grupo. O anfitrião tem de manter esta página aberta.`);
+        showApp(); sync();
+        return;
+      }catch(e){
+        lastErr = e; console.error('Falha ao criar sessão (tentativa '+(attempt+1)+'):', e);
+        dropPeer();
+        if(!(e && e.type==='unavailable-id')) break; // só repete se o código já estiver em uso
+      }
     }
+    isHost=false;
+    landingMsg('Não foi possível criar a sessão: '+peerErrorMsg(lastErr), true);
+    $('hostBtn').disabled=false; $('joinBtn').disabled=false;
   };
 
   $('joinBtn').onclick=async()=>{
@@ -353,7 +370,7 @@ button{border:1px solid transparent;border-radius:9px;padding:10px 14px;font:700
       hostConn.on('data',d=>handleData(d,hostConn));
       hostConn.on('close',()=>setStatus('Ligação perdida'));
       setTimeout(()=>{ if(!hostConn.open && $('app').classList.contains('hidden')) fail('Ainda não foi possível ligar. Confirma o código e se o anfitrião continua com a página aberta.'); },7000);
-    }catch(e){ fail('Não foi possível entrar: '+(e.message||e)); }
+    }catch(e){ fail('Não foi possível entrar: '+peerErrorMsg(e)); }
   };
   $('roomInput').onkeydown=e=>{ if(e.key==='Enter') $('joinBtn').click(); };
 
