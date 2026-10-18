@@ -29,6 +29,11 @@ button{border:1px solid transparent;border-radius:9px;padding:10px 14px;font:700
 .sessionbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between}
 .sessionbar .code{font-weight:900;letter-spacing:.18em;color:var(--gold2);font-size:18px}
 .sessionbar .actions{display:flex;gap:8px;flex-wrap:wrap}
+.item.next{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
+.item.done{opacity:.6}
+.item .chip{flex:none;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.item.next .chip{color:var(--gold2);font-weight:800}
+.subhead{margin:18px 0 0;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);font-weight:800}
 
 /* Animação do baú */
 .stage{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(5,8,18,.88);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .3s;cursor:pointer}
@@ -121,12 +126,13 @@ button{border:1px solid transparent;border-radius:9px;padding:10px 14px;font:700
       <section class="panel wide">
         <div class="row" style="justify-content:space-between"><h2>3. Sorteio</h2><span id="drawStatus" class="tag">À espera de participantes</span></div>
         <div class="steps">
-          <div class="step"><strong id="stepPlayers">—</strong><span>Ordem aleatória dos jogadores</span></div>
-          <div class="step"><strong id="stepChests">—</strong><span>Baús por posição (1 → N)</span></div>
-          <div class="step"><strong id="stepPairs">—</strong><span>Distribuições reveladas</span></div>
+          <div class="step"><strong id="stepPlayers">—</strong><span>1 · Ordem dos jogadores</span></div>
+          <div class="step"><strong id="stepChests">—</strong><span>2 · Ordem dos baús</span></div>
+          <div class="step"><strong id="stepPairs">—</strong><span>3 · Baús abertos</span></div>
         </div>
-        <p class="muted">O sorteio baralha os jogadores. Depois, o baú nº 1 vai para o jogador na posição 1, o baú nº 2 para a posição 2, e assim sucessivamente. Para manter o sorteio justo, o anfitrião deve iniciar apenas quando as listas estiverem completas.</p>
-        <div class="row" id="drawButtons"><button id="drawBtn" disabled>Sortear</button><button class="secondary" id="resetDrawBtn">Limpar resultado</button></div>
+        <p class="muted">São dois sorteios. <strong>1)</strong> Sorteia-se a ordem dos jogadores (posição 1, 2, 3…). <strong>2)</strong> Sorteia-se a ordem dos baús: o baú que calhar na posição 1 vai para o jogador da posição 1, e assim sucessivamente. A ordem dos baús fica escondida: cada atribuição só é revelada quando o anfitrião abre o baú seguinte. Para ser justo, o anfitrião deve começar só com as listas completas.</p>
+        <div class="row" id="drawButtons"><button id="drawBtn" disabled>1. Sortear ordem dos jogadores</button><button id="drawChestsBtn" disabled>2. Sortear ordem dos baús</button><button class="secondary" id="resetDrawBtn">Limpar resultado</button></div>
+        <div id="orderBox"></div>
         <div id="results" style="margin-top:14px"></div>
         <div class="row" style="margin-top:14px"><button class="secondary" id="copyResultsBtn">Copiar resultado</button></div>
         <p id="appMessage" class="muted" style="font-size:13px;margin-bottom:0"></p>
@@ -135,7 +141,7 @@ button{border:1px solid transparent;border-radius:9px;padding:10px 14px;font:700
   </div>
 </main>
 <footer class="footer">
-  <div>Criado por <strong>Leidson Cruz</strong> · <a href="https://github.com/leidsoncruz" target="_blank" rel="noopener noreferrer">@leidsoncruz</a></div>
+  <div>Criado por <strong>O_TEU_NOME</strong> e <a href="https://github.com/leidsoncruz" target="_blank" rel="noopener noreferrer">@leidsoncruz</a> · <a href="https://github.com/leidsoncruz" target="_blank" rel="noopener noreferrer">GitHub</a></div>
   <div style="margin-top:4px">Feito para a comunidade de Ultima Online · Pensado para o servidor <a href="https://auroriashard.com.br/" target="_blank" rel="noopener noreferrer">Auroria</a> · Não é afiliado ao jogo nem ao servidor.</div>
 </footer>
 
@@ -201,7 +207,11 @@ button{border:1px solid transparent;border-radius:9px;padding:10px 14px;font:700
   function setRoomInfo(text){ $('roomInfo').textContent = text; }
   function send(conn, data){ try { if(conn && conn.open) conn.send(data); } catch(e){} }
   function broadcast(data){ for(const c of connections.values()) send(c,data); }
-  function snapshot(){ return {type:'state', players, chests, result, hostPeerId, roomCode, revealCount}; }
+  // Aos convidados só se enviam as atribuições já reveladas: a ordem dos baús fica escondida até cada baú ser aberto.
+  function snapshot(){
+    const r = result ? {...result, pairs: result.pairs.slice(0, revealCount)} : null;
+    return {type:'state', players, chests, result:r, hostPeerId, roomCode, revealCount};
+  }
   function sync(){ render(); if(isHost) broadcast(snapshot()); processReveals(); }
   function setEditable(){ $('playerAdmin').classList.toggle('hidden',!isHost); $('chestAdmin').classList.toggle('hidden',!isHost); $('drawButtons').classList.toggle('hidden',!isHost); }
 
@@ -216,18 +226,37 @@ button{border:1px solid transparent;border-radius:9px;padding:10px 14px;font:700
     renderList('playersList',players,'player'); renderList('chestsList',chests,'chest');
     setEditable();
     const valid = players.length > 0 && players.length === chests.length;
+    const total = result ? result.total : 0;
+    const chestsDrawn = !!(result && result.chestsDrawn);
     $('drawBtn').disabled = !isHost || !valid || animating;
-    $('drawStatus').textContent = result ? 'Sorteio concluído' : valid ? 'Pronto para sortear' : 'É preciso ter o mesmo número de jogadores e baús';
-    $('stepPlayers').textContent = result ? result.players.length : '—';
-    $('stepChests').textContent = result ? result.chests.length : chests.length;
-    $('stepPairs').textContent = result ? `${Math.min(shownCount,result.pairs.length)}/${result.pairs.length}` : '—';
-    if(!result){ $('results').innerHTML = '<p class="muted">O resultado aparece aqui para todos os participantes assim que o anfitrião iniciar o sorteio.</p>'; return; }
-    const total = result.pairs.length;
-    const waiting = revealCount === 0 && !animating;
-    $('results').innerHTML = result.pairs.slice(0,shownCount).map((p,i)=>`<div class="result-row reveal"><div><div class="tag">Baú ${i+1}</div><div class="chest">🧰 ${escapeHtml(p.chest)}</div></div><div class="arrow">→</div><div><div class="tag">Jogador ${i+1}</div><div class="player">⚔️ ${escapeHtml(p.player)}</div></div></div>`).join('')
-      + (shownCount < total
-          ? `<button id="revealNextBtn" style="margin-top:12px" ${(isHost && !animating)?'':'disabled'}>${waiting?'Abrir primeiro baú':'Abrir próximo baú'}</button>${isHost?'':'<span class="muted" style="margin-left:10px;font-size:13px">O anfitrião vai abrir os baús…</span>'}`
-          : '<p class="status" style="margin-top:12px"><span class="dot"></span>Todos os baús foram atribuídos</p>');
+    $('drawChestsBtn').disabled = !isHost || !result || chestsDrawn || animating;
+    $('drawStatus').textContent = !result ? (valid ? 'Pronto para sortear a ordem dos jogadores' : 'É preciso ter o mesmo número de jogadores e baús')
+      : !chestsDrawn ? 'Ordem dos jogadores sorteada · falta sortear os baús'
+      : shownCount < total ? 'A abrir os baús' : 'Sorteio concluído';
+    $('stepPlayers').textContent = result ? 'Sorteada' : 'Pendente';
+    $('stepChests').textContent = chestsDrawn ? 'Sorteada' : 'Pendente';
+    $('stepPairs').textContent = chestsDrawn ? `${Math.min(shownCount,total)}/${total}` : '—';
+
+    // Cartão com a ordem dos jogadores (visível logo após o 1.º sorteio; não revela os baús)
+    if(!result){ $('orderBox').innerHTML = ''; $('results').innerHTML = '<p class="muted">Os sorteios aparecem aqui para todos os participantes assim que o anfitrião os iniciar.</p>'; return; }
+    $('orderBox').innerHTML = '<div class="subhead">Ordem dos jogadores</div><div class="list">' + result.order.map((name,i)=>{
+      const done = chestsDrawn && i < shownCount, next = chestsDrawn && i === shownCount;
+      return `<div class="item${done?' done':''}${next?' next':''}"><span class="num">${i+1}</span><span class="name">${escapeHtml(name)}</span><span class="chip">${done?'✓ Já abriu':next?'Próximo':''}</span></div>`;
+    }).join('') + '</div>';
+
+    // Resultado: só as atribuições já reveladas (posição → jogador ganha o baú sorteado para essa posição)
+    let html = '<div class="subhead" style="margin-bottom:2px">Resultado</div>';
+    if(!chestsDrawn){
+      html += `<p class="muted" style="margin:8px 0 0">${isHost ? 'Falta o passo 2: sorteia a ordem dos baús.' : 'O anfitrião ainda vai sortear a ordem dos baús…'}</p>`;
+    } else {
+      html += result.pairs.slice(0,shownCount).map((p,i)=>`<div class="result-row reveal"><div><div class="tag">Baú ${p.chestNum}</div><div class="chest">🧰 ${escapeHtml(p.chest)}</div></div><div class="arrow">→</div><div><div class="tag">Posição ${p.pos}</div><div class="player">⚔️ ${escapeHtml(p.player)}</div></div></div>`).join('');
+      if(shownCount < total){
+        html += `<button id="revealNextBtn" style="margin-top:12px" ${(isHost && !animating)?'':'disabled'}>${shownCount===0?'Abrir primeiro baú':'Abrir próximo baú'} · vez de ${escapeHtml(result.order[shownCount])}</button>${isHost?'':'<span class="muted" style="margin-left:10px;font-size:13px">O anfitrião vai abrir os baús…</span>'}`;
+      } else {
+        html += '<p class="status" style="margin-top:12px"><span class="dot"></span>Todos os baús foram atribuídos</p>';
+      }
+    }
+    $('results').innerHTML = html;
     const next = $('revealNextBtn'); if(next) next.onclick = () => { if(!isHost || animating) return; sendCommand('reveal'); };
   }
 
@@ -244,8 +273,8 @@ button{border:1px solid transparent;border-radius:9px;padding:10px 14px;font:700
   function playChest(i, pair){
     return new Promise(resolve => {
       const st = $('stage');
-      $('stageLabel').textContent = `Baú ${i+1}`;
-      $('stageChest').textContent = pair.chest;
+      $('stageLabel').textContent = `Posição ${pair.pos}`;
+      $('stageChest').textContent = `Baú ${pair.chestNum} · ${pair.chest}`;
       $('stageName').textContent = pair.player;
       st.className = 'stage'; void st.offsetWidth;
       st.classList.add('show');
@@ -296,22 +325,36 @@ button{border:1px solid transparent;border-radius:9px;padding:10px 14px;font:700
       hostPeerId=data.hostPeerId; roomCode=data.roomCode; setStatus('Ligado à sessão',true);
       setRoomInfo(`Sessão ${roomCode} · ligado ao anfitrião. Partilha este código com os outros jogadores.`);
     } else if(data.type==='command' && isHost){
-      if(data.action==='addPlayer' && data.name && !players.some(p=>p.name.toLowerCase()===data.name.toLowerCase())) players.push({id:uid(),name:data.name});
-      if(data.action==='addChest' && data.name) chests.push({id:uid(),name:data.name});
-      if(data.action==='removePlayer') players=players.filter(x=>x.id!==data.id);
-      if(data.action==='removeChest') chests=chests.filter(x=>x.id!==data.id);
-      if(data.action==='draw') doDraw();
+      // Alterar as listas depois de sortear invalida a ordem já sorteada, por isso o resultado é limpo.
+      const invalidate = () => { if(result){ result=null; revealCount=0; shownCount=0; } };
+      if(data.action==='addPlayer' && data.name && !players.some(p=>p.name.toLowerCase()===data.name.toLowerCase())){ players.push({id:uid(),name:data.name}); invalidate(); }
+      if(data.action==='addChest' && data.name){ chests.push({id:uid(),name:data.name}); invalidate(); }
+      if(data.action==='removePlayer'){ players=players.filter(x=>x.id!==data.id); invalidate(); }
+      if(data.action==='removeChest'){ chests=chests.filter(x=>x.id!==data.id); invalidate(); }
+      if(data.action==='drawPlayers') doDrawPlayers();
+      if(data.action==='drawChests') doDrawChests();
       if(data.action==='reset') { result=null; revealCount=0; shownCount=0; }
-      if(data.action==='reveal' && result) revealCount=Math.min(revealCount+1,result.pairs.length);
+      if(data.action==='reveal' && result && result.chestsDrawn) revealCount=Math.min(revealCount+1,result.total);
       sync();
     } else if(data.type==='stateRequest' && isHost){ send(conn,snapshot()); }
   }
   function sendCommand(action, extra={}){ const d={type:'command',action,...extra}; if(isHost){ handleData(d,null); } else send(hostConn,d); }
   function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=crypto.getRandomValues(new Uint32Array(1))[0]%(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
-  function doDraw(){
+  // Sorteio 1: ordem dos jogadores (posição 1, 2, 3…). Visível para todos.
+  function doDrawPlayers(){
     if(!isHost || players.length===0 || players.length!==chests.length) return;
-    const shuffledPlayers=shuffle(players);
-    result={players:shuffledPlayers.map(p=>p.name),chests:chests.map(c=>c.name),pairs:chests.map((c,i)=>({chest:c.name,player:shuffledPlayers[i].name}))};
+    const order = shuffle(players).map(p=>p.name);
+    result = {order, total:order.length, chestsDrawn:false, pairs:[]};
+    revealCount=0; shownCount=0;
+  }
+  // Sorteio 2: ordem dos baús. O baú que calha na posição k vai para o jogador da posição k.
+  // As atribuições ficam só no anfitrião e vão sendo enviadas aos outros à medida que cada baú é aberto.
+  function doDrawChests(){
+    if(!isHost || !result || result.chestsDrawn) return;
+    const numbered = chests.map((c,i)=>({num:i+1,name:c.name}));
+    const shuffled = shuffle(numbered);
+    result.pairs = result.order.map((player,i)=>({pos:i+1, player, chestNum:shuffled[i].num, chest:shuffled[i].name}));
+    result.chestsDrawn = true;
     revealCount=0; shownCount=0;
   }
 
@@ -381,7 +424,8 @@ button{border:1px solid transparent;border-radius:9px;padding:10px 14px;font:700
   $('addChestBtn').onclick=()=>{const name=$('chestInput').value.trim();if(!name)return;sendCommand('addChest',{name});$('chestInput').value='';};
   $('chestInput').onkeydown=e=>{if(e.key==='Enter')$('addChestBtn').click();};
   document.addEventListener('click',e=>{const b=e.target.closest('[data-type]');if(!b)return;sendCommand(b.dataset.type==='player'?'removePlayer':'removeChest',{id:b.dataset.id});});
-  $('drawBtn').onclick=()=>sendCommand('draw');
+  $('drawBtn').onclick=()=>sendCommand('drawPlayers');
+  $('drawChestsBtn').onclick=()=>sendCommand('drawChests');
   $('resetDrawBtn').onclick=()=>sendCommand('reset');
 
   async function copyText(text, okMsg){
@@ -390,8 +434,9 @@ button{border:1px solid transparent;border-radius:9px;padding:10px 14px;font:700
   $('copyResultsBtn').onclick=()=>{
     if(!result){ appMsg('Ainda não há resultado para copiar.'); return; }
     const done = result.pairs.slice(0, shownCount);
-    if(!done.length){ appMsg('Ainda não foi aberto nenhum baú.'); return; }
-    copyText(done.map((p,i)=>`${i+1}. Baú ${p.chest} → ${p.player}`).join('\n'),'Resultado copiado.');
+    let text = 'Ordem dos jogadores:\n' + result.order.map((n,i)=>`${i+1}. ${n}`).join('\n');
+    if(done.length) text += '\n\nBaús abertos:\n' + done.map(p=>`Posição ${p.pos}: ${p.player} → Baú ${p.chestNum} (${p.chest})`).join('\n');
+    copyText(text,'Resultado copiado.');
   };
   $('copyCodeBtn').onclick=()=>copyText(roomCode,'Código copiado.');
   $('copyLinkBtn').onclick=()=>{ const u=new URL(location.href); u.search=''; u.hash=''; u.searchParams.set('sala',roomCode); copyText(u.toString(),'Link copiado.'); };
