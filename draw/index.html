@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#111827">
+<title>Loot Draw — Ultima Online</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#151d30;--panel2:#1d2940;--gold:#e7bd68;--gold2:#f6dda0;--text:#f4f0e6;--muted:#a9b4c9;--line:#34425d;--green:#78d6a1;--red:#ff8d8d}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:flex;flex-direction:column;background:radial-gradient(ellipse at top,#17233a 0,#0b1020 55%);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;color:var(--text)}
+header{padding:28px 20px 18px;text-align:center;border-bottom:1px solid var(--line);background:#0b1020cc}
+.logo{font-size:12px;letter-spacing:.22em;color:var(--gold);font-weight:800}.title{font-size:clamp(25px,4vw,40px);font-weight:900;letter-spacing:-.04em;margin:4px 0}.subtitle{color:var(--muted);margin:0}
+main{flex:1 0 auto;width:100%;max-width:1100px;margin:24px auto;padding:0 16px 40px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.panel{background:linear-gradient(145deg,#182238,#121a2b);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 10px 28px #0002}.panel h2{margin:0 0 12px;font-size:19px}.muted{color:var(--muted)}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.row>*{flex:1}.row button{flex:0 0 auto}
+input,textarea{width:100%;background:#0b1222;border:1px solid #3a4966;border-radius:9px;color:var(--text);padding:11px 12px;font:inherit;outline:none}input:focus,textarea:focus{border-color:var(--gold)}textarea{min-height:110px;resize:vertical}
+button{border:1px solid transparent;border-radius:9px;padding:10px 14px;font:700 14px system-ui;cursor:pointer;background:var(--gold);color:#201708;transition:transform .12s,filter .12s}button:hover{filter:brightness(1.08);transform:translateY(-1px)}button:disabled{opacity:.4;cursor:not-allowed;transform:none}.secondary{background:#26344e;color:var(--text);border-color:#41516f}.danger{background:#542c37;color:#ffdbe0;border-color:#80414f}.small{padding:6px 10px;font-size:12px}.status{display:inline-flex;align-items:center;gap:7px;padding:5px 9px;border-radius:99px;background:#1b2d30;color:var(--green);font-size:12px;font-weight:700}.dot{width:7px;height:7px;border-radius:50%;background:currentColor}.hidden{display:none!important}.list{display:flex;flex-direction:column;gap:8px;margin-top:12px}.item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#0e1627;border:1px solid #293650;border-radius:10px}.num{width:28px;height:28px;display:grid;place-items:center;border-radius:7px;background:#26344e;color:var(--gold2);font-weight:900;flex:none}.item .name{flex:1;overflow-wrap:anywhere}.item .remove{flex:none}.tag{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}.step{padding:13px;border:1px solid var(--line);border-radius:12px;background:#10182a}.step strong{display:block;color:var(--gold2);font-size:22px}.step span{color:var(--muted);font-size:12px}.result-row{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;padding:14px;background:#10182a;border:1px solid #35435e;border-radius:12px;margin-top:9px}.chest{color:var(--gold2);font-weight:800}.arrow{color:var(--muted);font-size:22px}.player{font-weight:800}.reveal{animation:pop .35s ease-out}@keyframes pop{from{opacity:.25;transform:translateY(5px)}to{opacity:1;transform:none}}.notice{padding:12px 14px;border-radius:10px;background:#29253a;border:1px solid #514568;color:#e7dcff;font-size:13px}.wide{grid-column:1/-1}.footer{flex-shrink:0;margin-top:auto;padding:20px 16px 24px;text-align:center;color:#71809b;font-size:12px;border-top:1px solid var(--line);background:#0b1020cc}.footer a{color:var(--gold);text-decoration:none;font-weight:700}.footer a:hover{color:var(--gold2);text-decoration:underline}.footer strong{color:var(--muted)}
+
+/* Ecrã inicial: criar OU entrar */
+.choice{display:flex;flex-direction:column;gap:12px}
+.choice .icon{font-size:34px;line-height:1}
+.choice p{margin:0}
+.choice .spacer{flex:1}
+.choice button{width:100%;padding:12px 14px;font-size:15px}
+.choice input{text-align:center;text-transform:uppercase;letter-spacing:.2em;font-weight:800}
+.choice .badge{align-self:flex-start}
+.divider{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin:16px 0}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
+.landing-msg{min-height:20px;font-size:13px;margin:14px 0 0;text-align:center}
+.landing-msg.err{color:var(--red)}
+.sessionbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+.sessionbar .code{font-weight:900;letter-spacing:.18em;color:var(--gold2);font-size:18px}
+.sessionbar .actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* Animação do baú */
+.stage{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(5,8,18,.88);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .3s;cursor:pointer}
+.stage.show{opacity:1;pointer-events:auto}
+.stage-box{text-align:center;padding:16px;width:min(92vw,360px)}
+.stage-label{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:800}
+.stage-chest-name{font-size:22px;font-weight:900;color:var(--gold2);margin:2px 0 6px;overflow-wrap:anywhere}
+.scene{position:relative;width:240px;height:290px;margin:0 auto}
+.glow{position:absolute;left:50%;top:150px;width:340px;height:340px;margin:-170px 0 0 -170px;border-radius:50%;background:radial-gradient(circle,rgba(246,221,160,.75) 0,rgba(231,189,104,.3) 35%,transparent 68%);opacity:0;transform:scale(.3);transition:opacity .6s,transform .8s}
+.stage.open .glow{opacity:1;transform:scale(1)}
+.chest-svg{position:absolute;left:0;bottom:0;width:240px;height:192px;z-index:3;overflow:visible;filter:drop-shadow(0 12px 18px rgba(0,0,0,.5))}
+.chest-svg .lid{transform-box:view-box;transform-origin:100px 70px;transition:transform .7s cubic-bezier(.3,1.4,.5,1)}
+.chest-svg .inside{opacity:0;transition:opacity .4s}
+.stage.open .chest-svg .lid{transform:translateY(-6px) scaleY(.16)}
+.stage.open .chest-svg .inside{opacity:1}
+.stage.shake .chest-svg{animation:shake .5s linear infinite}
+@keyframes shake{0%,100%{transform:translateX(0) rotate(0)}20%{transform:translateX(-5px) rotate(-2deg)}40%{transform:translateX(5px) rotate(2deg)}60%{transform:translateX(-4px) rotate(-1.5deg)}80%{transform:translateX(4px) rotate(1.5deg)}}
+.stage.show .chest-svg{animation:drop .5s ease-out}
+.stage.shake.show .chest-svg{animation:shake .5s linear infinite}
+@keyframes drop{from{transform:translateY(-40px) scale(.8);opacity:0}to{transform:none;opacity:1}}
+.winner{position:absolute;left:50%;top:70px;z-index:2;min-width:180px;max-width:300px;padding:14px 20px;border-radius:14px;background:linear-gradient(145deg,#26344e,#151d30);border:2px solid var(--gold);box-shadow:0 0 36px rgba(231,189,104,.55);transform:translate(-50%,110px) scale(.5);opacity:0;transition:transform .8s cubic-bezier(.2,1.3,.4,1),opacity .4s}
+.winner .tag{color:var(--gold)}
+.winner .who{font-size:24px;font-weight:900;color:var(--gold2);overflow-wrap:anywhere;line-height:1.2}
+.stage.reveal .winner{transform:translate(-50%,0) scale(1);opacity:1}
+.sparkles{position:absolute;inset:0;pointer-events:none;z-index:4}
+.sparkles i{position:absolute;left:50%;top:150px;width:8px;height:8px;margin:-4px;border-radius:50%;background:var(--gold2);opacity:0}
+.stage.reveal .sparkles i{animation:spark 1.4s ease-out forwards;animation-delay:var(--d)}
+@keyframes spark{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--x),var(--y)) scale(.2)}}
+.stage-hint{margin-top:10px;font-size:12px;color:var(--muted)}
+@media(prefers-reduced-motion:reduce){.stage.shake .chest-svg,.stage.show .chest-svg,.stage.shake.show .chest-svg{animation:none}.sparkles{display:none}}
+
+@media(max-width:760px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.steps{grid-template-columns:1fr}.result-row{grid-template-columns:1fr auto 1fr;gap:6px;padding:10px}.panel{padding:16px}}
+</style>
+</head>
+<body>
+<header><div class="logo">ULTIMA ONLINE · COMMUNITY TOOL</div><div class="title">Loot Draw</div><p class="subtitle">Um sorteio transparente para o loot da dungeon.</p></header>
+<main>
+
+  <!-- ECRÃ INICIAL -->
+  <section id="landing">
+    <div class="grid">
+      <div class="panel choice">
+        <span class="icon">👑</span>
+        <h2 style="margin:0">Criar sessão</h2>
+        <p class="muted">Sou o anfitrião: vou gerir jogadores e baús e iniciar o sorteio. Recebo um código para partilhar com o grupo.</p>
+        <div class="spacer"></div>
+        <button id="hostBtn">Criar nova sessão</button>
+      </div>
+      <div class="panel choice">
+        <span class="icon">⚔️</span>
+        <h2 style="margin:0">Entrar numa sessão</h2>
+        <p class="muted">Sou jogador: tenho um código do anfitrião e quero acompanhar o sorteio em tempo real.</p>
+        <input id="roomInput" placeholder="CÓDIGO" autocomplete="off" maxlength="10" aria-label="Código da sessão">
+        <button class="secondary" id="joinBtn">Entrar na sessão</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- APP (depois de ligado) -->
+  <div id="app" class="hidden">
+    <div class="panel" style="margin-bottom:16px">
+      <div class="sessionbar">
+        <div>
+          <div class="tag" id="roleTag">Sessão</div>
+          <div class="code" id="codeLabel">—</div>
+        </div>
+        <span id="connectionStatus" class="status"><span class="dot"></span>Desligado</span>
+        <div class="actions">
+          <button class="secondary small" id="copyCodeBtn">Copiar código</button>
+          <button class="secondary small" id="copyLinkBtn">Copiar link</button>
+          <button class="danger small" id="leaveBtn">Sair da sessão</button>
+        </div>
+      </div>
+      <div id="roomInfo" class="notice" style="margin-top:12px"></div>
+    </div>
+    <div class="grid">
+      <section class="panel">
+        <div class="row"><h2>1. Jogadores</h2><span class="tag" id="playerCount">0 jogadores</span></div>
+        <p class="muted">A ordem da lista não determina o resultado; os jogadores serão baralhados no sorteio.</p>
+        <div id="playerAdmin" class="row"><input id="playerInput" placeholder="Nome do jogador" maxlength="40"><button id="addPlayerBtn">Adicionar</button></div>
+        <div id="playersList" class="list"></div>
+      </section>
+      <section class="panel">
+        <div class="row"><h2>2. Baús</h2><span class="tag" id="chestCount">0 baús</span></div>
+        <p class="muted">Identifica os baús pela ordem em que foram numerados na dungeon.</p>
+        <div id="chestAdmin" class="row"><input id="chestInput" placeholder="Nome ou descrição do baú" maxlength="60"><button id="addChestBtn">Adicionar</button></div>
+        <div id="chestsList" class="list"></div>
+      </section>
+      <section class="panel wide">
+        <div class="row" style="justify-content:space-between"><h2>3. Sorteio</h2><span id="drawStatus" class="tag">À espera de participantes</span></div>
+        <div class="steps">
+          <div class="step"><strong id="stepPlayers">—</strong><span>Ordem aleatória dos jogadores</span></div>
+          <div class="step"><strong id="stepChests">—</strong><span>Baús por posição (1 → N)</span></div>
+          <div class="step"><strong id="stepPairs">—</strong><span>Distribuições reveladas</span></div>
+        </div>
+        <p class="muted">O sorteio baralha os jogadores. Depois, o baú nº 1 vai para o jogador na posição 1, o baú nº 2 para a posição 2, e assim sucessivamente. Para manter o sorteio justo, o anfitrião deve iniciar apenas quando as listas estiverem completas.</p>
+        <div class="row" id="drawButtons"><button id="drawBtn" disabled>Sortear</button><button class="secondary" id="resetDrawBtn">Limpar resultado</button></div>
+        <div id="results" style="margin-top:14px"></div>
+        <div class="row" style="margin-top:14px"><button class="secondary" id="copyResultsBtn">Copiar resultado</button></div>
+        <p id="appMessage" class="muted" style="font-size:13px;margin-bottom:0"></p>
+      </section>
+    </div>
+  </div>
+</main>
+<footer class="footer">
+  <div>Criado por <strong>Leidson Cruz</strong> · <a href="https://github.com/leidsoncruz" target="_blank" rel="noopener noreferrer">@leidsoncruz</a></div>
+  <div style="margin-top:4px">Feito para a comunidade de Ultima Online · Pensado para o servidor <a href="https://auroriashard.com.br/" target="_blank" rel="noopener noreferrer">Auroria</a></div>
+</footer>
+
+<!-- ANIMAÇÃO DO BAÚ -->
+<div id="stage" class="stage" aria-live="polite">
+  <div class="stage-box">
+    <div class="stage-label" id="stageLabel">Baú 1</div>
+    <div class="stage-chest-name" id="stageChest"></div>
+    <div class="scene">
+      <div class="glow"></div>
+      <div class="winner"><div class="tag">Vencedor</div><div class="who" id="stageName"></div></div>
+      <svg class="chest-svg" viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <clipPath id="lidClip"><path d="M20 70 Q20 22 100 22 Q180 22 180 70 Z"/></clipPath>
+          <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7d5230"/><stop offset="1" stop-color="#583519"/></linearGradient>
+          <linearGradient id="goldg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6dda0"/><stop offset="1" stop-color="#e7bd68"/></linearGradient>
+        </defs>
+        <rect x="20" y="70" width="160" height="82" rx="7" fill="url(#wood)" stroke="#3b2412" stroke-width="3"/>
+        <path d="M20 96 H180 M20 122 H180" stroke="#3b2412" stroke-width="2" opacity=".6"/>
+        <rect x="46" y="70" width="14" height="82" fill="url(#goldg)" stroke="#8a6a2a" stroke-width="1.5"/>
+        <rect x="140" y="70" width="14" height="82" fill="url(#goldg)" stroke="#8a6a2a" stroke-width="1.5"/>
+        <rect x="20" y="142" width="160" height="10" rx="4" fill="url(#goldg)" stroke="#8a6a2a" stroke-width="1.5"/>
+        <rect class="inside" x="24" y="70" width="152" height="12" fill="#2a1a0c"/>
+        <g class="lid">
+          <path d="M20 70 Q20 22 100 22 Q180 22 180 70 Z" fill="url(#wood)" stroke="#3b2412" stroke-width="3"/>
+          <g clip-path="url(#lidClip)">
+            <rect x="46" y="10" width="14" height="62" fill="url(#goldg)" stroke="#8a6a2a" stroke-width="1.5"/>
+            <rect x="140" y="10" width="14" height="62" fill="url(#goldg)" stroke="#8a6a2a" stroke-width="1.5"/>
+          </g>
+          <rect x="20" y="64" width="160" height="10" rx="3" fill="url(#goldg)" stroke="#8a6a2a" stroke-width="1.5"/>
+          <rect x="90" y="60" width="20" height="26" rx="4" fill="url(#goldg)" stroke="#8a6a2a" stroke-width="1.5"/>
+          <circle cx="100" cy="70" r="3.2" fill="#3b2412"/><rect x="99" y="70" width="2" height="8" fill="#3b2412"/>
+        </g>
+      </svg>
+      <div class="sparkles" id="sparkles"></div>
+    </div>
+    <div class="stage-hint">Toca para saltar</div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  let peer = null, hostPeerId = null, hostConn = null, isHost = false, roomCode = '';
+  let players = [], chests = [], result = null, connections = new Map();
+  let revealCount = 0;   // estado partilhado: quantos baús o anfitrião já revelou
+  let shownCount = 0;    // quantos já foram mostrados localmente (depois da animação)
+  let animating = false, synced = false, skipAnim = null;
+
+  const uid = () => Math.random().toString(36).slice(2, 8).toUpperCase();
+  const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const setStatus = (label, ok=false) => { $('connectionStatus').innerHTML = `<span class="dot"></span>${label}`; $('connectionStatus').style.color = ok ? 'var(--green)' : 'var(--gold)'; };
+  const landingMsg = (text, err=false) => { const m = $('connectionMessage'); m.textContent = text; m.classList.toggle('err', err); };
+  const appMsg = text => { $('appMessage').textContent = text; };
+
+  function showApp(){
+    $('landing').classList.add('hidden');
+    $('app').classList.remove('hidden');
+    $('codeLabel').textContent = roomCode;
+    $('roleTag').textContent = isHost ? 'Sessão · Anfitrião' : 'Sessão · Jogador';
+  }
+  function setRoomInfo(text){ $('roomInfo').textContent = text; }
+  function send(conn, data){ try { if(conn && conn.open) conn.send(data); } catch(e){} }
+  function broadcast(data){ for(const c of connections.values()) send(c,data); }
+  function snapshot(){ return {type:'state', players, chests, result, hostPeerId, roomCode, revealCount}; }
+  function sync(){ render(); if(isHost) broadcast(snapshot()); processReveals(); }
+  function setEditable(){ $('playerAdmin').classList.toggle('hidden',!isHost); $('chestAdmin').classList.toggle('hidden',!isHost); $('drawButtons').classList.toggle('hidden',!isHost); }
+
+  function renderList(target, arr, type){
+    const canEdit = isHost;
+    $(target).innerHTML = arr.length ? arr.map((x,i)=>`<div class="item"><span class="num">${i+1}</span><span class="name">${escapeHtml(x.name)}</span>${canEdit?`<button class="danger small remove" data-type="${type}" data-id="${escapeHtml(x.id)}" title="Remover">×</button>`:''}</div>`).join('') : '<p class="muted">Ainda não foi adicionado nenhum.</p>';
+  }
+
+  function render(){
+    $('playerCount').textContent = `${players.length} jogador${players.length===1?'':'es'}`;
+    $('chestCount').textContent = `${chests.length} baú${chests.length===1?'':'s'}`;
+    renderList('playersList',players,'player'); renderList('chestsList',chests,'chest');
+    setEditable();
+    const valid = players.length > 0 && players.length === chests.length;
+    $('drawBtn').disabled = !isHost || !valid || animating;
+    $('drawStatus').textContent = result ? 'Sorteio concluído' : valid ? 'Pronto para sortear' : 'É preciso ter o mesmo número de jogadores e baús';
+    $('stepPlayers').textContent = result ? result.players.length : '—';
+    $('stepChests').textContent = result ? result.chests.length : chests.length;
+    $('stepPairs').textContent = result ? `${Math.min(shownCount,result.pairs.length)}/${result.pairs.length}` : '—';
+    if(!result){ $('results').innerHTML = '<p class="muted">O resultado aparece aqui para todos os participantes assim que o anfitrião iniciar o sorteio.</p>'; return; }
+    const total = result.pairs.length;
+    const waiting = revealCount === 0 && !animating;
+    $('results').innerHTML = result.pairs.slice(0,shownCount).map((p,i)=>`<div class="result-row reveal"><div><div class="tag">Baú ${i+1}</div><div class="chest">🧰 ${escapeHtml(p.chest)}</div></div><div class="arrow">→</div><div><div class="tag">Jogador ${i+1}</div><div class="player">⚔️ ${escapeHtml(p.player)}</div></div></div>`).join('')
+      + (shownCount < total
+          ? `<button id="revealNextBtn" style="margin-top:12px" ${(isHost && !animating)?'':'disabled'}>${waiting?'Abrir primeiro baú':'Abrir próximo baú'}</button>${isHost?'':'<span class="muted" style="margin-left:10px;font-size:13px">O anfitrião vai abrir os baús…</span>'}`
+          : '<p class="status" style="margin-top:12px"><span class="dot"></span>Todos os baús foram atribuídos</p>');
+    const next = $('revealNextBtn'); if(next) next.onclick = () => { if(!isHost || animating) return; sendCommand('reveal'); };
+  }
+
+  /* ---------- Animação do baú ---------- */
+  (function buildSparkles(){
+    const box = $('sparkles'); let html = '';
+    for(let i=0;i<18;i++){
+      const a = (Math.PI*2*i)/18 + Math.random()*.4, r = 90 + Math.random()*90;
+      html += `<i style="--x:${Math.round(Math.cos(a)*r)}px;--y:${Math.round(Math.sin(a)*r - 30)}px;--d:${(Math.random()*.25).toFixed(2)}s"></i>`;
+    }
+    box.innerHTML = html;
+  })();
+
+  function playChest(i, pair){
+    return new Promise(resolve => {
+      const st = $('stage');
+      $('stageLabel').textContent = `Baú ${i+1}`;
+      $('stageChest').textContent = pair.chest;
+      $('stageName').textContent = pair.player;
+      st.className = 'stage'; void st.offsetWidth;
+      st.classList.add('show');
+      const timers = []; const t = (fn,ms) => timers.push(setTimeout(fn,ms));
+      let done = false;
+      const finish = () => {
+        if(done) return; done = true;
+        timers.forEach(clearTimeout); skipAnim = null; st.onclick = null;
+        st.classList.remove('show');
+        setTimeout(() => { st.className = 'stage'; resolve(); }, 320);
+      };
+      t(() => st.classList.add('shake'), 500);
+      t(() => { st.classList.remove('shake'); st.classList.add('open'); }, 1600);
+      t(() => st.classList.add('reveal'), 2100);
+      t(finish, 5200);
+      skipAnim = finish; st.onclick = finish;
+    });
+  }
+
+  function processReveals(){
+    if(animating) { if(!result && skipAnim) skipAnim(); return; }
+    if(!result){ shownCount = 0; return; }
+    if(shownCount > revealCount) shownCount = revealCount;
+    if(shownCount < revealCount){
+      animating = true; render();
+      const cap = result, i = shownCount;
+      playChest(i, cap.pairs[i]).then(() => {
+        shownCount = (result === cap) ? i + 1 : 0;
+        animating = false; render(); processReveals();
+      });
+    }
+  }
+
+  /* ---------- Mensagens ---------- */
+  function handleData(data, conn){
+    if(!data || !data.type) return;
+    if(data.type==='hello' && isHost){
+      connections.set(conn.peer,conn);
+      send(conn,{type:'welcome',hostPeerId:peer.id,roomCode,host:true});
+      send(conn,snapshot());
+    } else if(data.type==='state' && !isHost){
+      players=data.players||[]; chests=data.chests||[]; result=data.result||null;
+      hostPeerId=data.hostPeerId||hostPeerId; roomCode=data.roomCode||roomCode;
+      revealCount = data.revealCount ?? (result ? result.pairs.length : 0);
+      if(!synced){ shownCount = revealCount; synced = true; } // quem entra a meio vê o que já foi revelado, sem animação
+      showApp(); render(); processReveals();
+    } else if(data.type==='welcome' && !isHost){
+      hostPeerId=data.hostPeerId; roomCode=data.roomCode; setStatus('Ligado à sessão',true);
+      setRoomInfo(`Sessão ${roomCode} · ligado ao anfitrião. Partilha este código com os outros jogadores.`);
+    } else if(data.type==='command' && isHost){
+      if(data.action==='addPlayer' && data.name && !players.some(p=>p.name.toLowerCase()===data.name.toLowerCase())) players.push({id:uid(),name:data.name});
+      if(data.action==='addChest' && data.name) chests.push({id:uid(),name:data.name});
+      if(data.action==='removePlayer') players=players.filter(x=>x.id!==data.id);
+      if(data.action==='removeChest') chests=chests.filter(x=>x.id!==data.id);
+      if(data.action==='draw') doDraw();
+      if(data.action==='reset') { result=null; revealCount=0; shownCount=0; }
+      if(data.action==='reveal' && result) revealCount=Math.min(revealCount+1,result.pairs.length);
+      sync();
+    } else if(data.type==='stateRequest' && isHost){ send(conn,snapshot()); }
+  }
+  function sendCommand(action, extra={}){ const d={type:'command',action,...extra}; if(isHost){ handleData(d,null); } else send(hostConn,d); }
+  function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=crypto.getRandomValues(new Uint32Array(1))[0]%(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+  function doDraw(){
+    if(!isHost || players.length===0 || players.length!==chests.length) return;
+    const shuffledPlayers=shuffle(players);
+    result={players:shuffledPlayers.map(p=>p.name),chests:chests.map(c=>c.name),pairs:chests.map((c,i)=>({chest:c.name,player:shuffledPlayers[i].name}))};
+    revealCount=0; shownCount=0;
+  }
+
+  /* ---------- Ligação ---------- */
+  function initPeer(id){
+    return new Promise((resolve,reject)=>{
+      if(!window.Peer){ reject(new Error('A biblioteca de ligação não carregou. Verifica a ligação à internet.')); return; }
+      peer=new Peer(id || undefined,{debug:0});
+      peer.on('open',resolve);
+      peer.on('error',e=>{ setStatus('Erro de ligação'); reject(e); });
+      peer.on('connection',conn=>{ conn.on('open',()=>{connections.set(conn.peer,conn); conn.on('data',d=>handleData(d,conn)); conn.on('close',()=>{connections.delete(conn.peer);}); }); });
+    });
+  }
+  function dropPeer(){ try{ if(peer) peer.destroy(); }catch(e){} peer=null; }
+
+  $('hostBtn').onclick=async()=>{
+    $('hostBtn').disabled=true; $('joinBtn').disabled=true; landingMsg('A criar sessão…');
+    try{
+      isHost=true; roomCode=uid(); await initPeer('uo-loot-'+roomCode.toLowerCase());
+      hostPeerId=peer.id; setStatus('Sessão criada',true);
+      setRoomInfo(`Código: ${roomCode} · Partilha este código com o grupo. O anfitrião tem de manter esta página aberta.`);
+      showApp(); sync();
+    }catch(e){
+      isHost=false; dropPeer();
+      landingMsg('Não foi possível criar a sessão: '+(e.message||e), true);
+      $('hostBtn').disabled=false; $('joinBtn').disabled=false;
+    }
+  };
+
+  $('joinBtn').onclick=async()=>{
+    const code=$('roomInput').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+    if(!code){ landingMsg('Introduz o código da sessão.', true); $('roomInput').focus(); return; }
+    $('joinBtn').disabled=true; $('hostBtn').disabled=true; landingMsg('A ligar…');
+    const fail = msg => { landingMsg(msg, true); dropPeer(); $('joinBtn').disabled=false; $('hostBtn').disabled=false; };
+    try{
+      await initPeer();
+      hostPeerId='uo-loot-'+code.toLowerCase(); roomCode=code;
+      hostConn=peer.connect(hostPeerId,{reliable:true});
+      hostConn.on('open',()=>{ send(hostConn,{type:'hello'}); setStatus('A ligar…'); });
+      hostConn.on('data',d=>handleData(d,hostConn));
+      hostConn.on('close',()=>setStatus('Ligação perdida'));
+      setTimeout(()=>{ if(!hostConn.open && $('app').classList.contains('hidden')) fail('Ainda não foi possível ligar. Confirma o código e se o anfitrião continua com a página aberta.'); },7000);
+    }catch(e){ fail('Não foi possível entrar: '+(e.message||e)); }
+  };
+  $('roomInput').onkeydown=e=>{ if(e.key==='Enter') $('joinBtn').click(); };
+
+  /* ---------- Controlos ---------- */
+  $('addPlayerBtn').onclick=()=>{const name=$('playerInput').value.trim();if(!name)return;sendCommand('addPlayer',{name});$('playerInput').value='';};
+  $('playerInput').onkeydown=e=>{if(e.key==='Enter')$('addPlayerBtn').click();};
+  $('addChestBtn').onclick=()=>{const name=$('chestInput').value.trim();if(!name)return;sendCommand('addChest',{name});$('chestInput').value='';};
+  $('chestInput').onkeydown=e=>{if(e.key==='Enter')$('addChestBtn').click();};
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-type]');if(!b)return;sendCommand(b.dataset.type==='player'?'removePlayer':'removeChest',{id:b.dataset.id});});
+  $('drawBtn').onclick=()=>sendCommand('draw');
+  $('resetDrawBtn').onclick=()=>sendCommand('reset');
+
+  async function copyText(text, okMsg){
+    try{ await navigator.clipboard.writeText(text); appMsg(okMsg); }catch(e){ prompt('Copia:',text); }
+  }
+  $('copyResultsBtn').onclick=()=>{
+    if(!result){ appMsg('Ainda não há resultado para copiar.'); return; }
+    const done = result.pairs.slice(0, shownCount);
+    if(!done.length){ appMsg('Ainda não foi aberto nenhum baú.'); return; }
+    copyText(done.map((p,i)=>`${i+1}. Baú ${p.chest} → ${p.player}`).join('\n'),'Resultado copiado.');
+  };
+  $('copyCodeBtn').onclick=()=>copyText(roomCode,'Código copiado.');
+  $('copyLinkBtn').onclick=()=>{ const u=new URL(location.href); u.search=''; u.hash=''; u.searchParams.set('sala',roomCode); copyText(u.toString(),'Link copiado.'); };
+  $('leaveBtn').onclick=()=>{try{if(hostConn)hostConn.close();if(peer)peer.destroy();}catch(e){}location.href=location.pathname;};
+
+  // Preenche o código se vier de um link partilhado (?sala=CODIGO)
+  try{ const c=new URLSearchParams(location.search).get('sala'); if(c){ $('roomInput').value=c.toUpperCase(); landingMsg('Código preenchido a partir do link. Carrega em "Entrar na sessão".'); } }catch(e){}
+})();
+</script>
+</body>
+</html>
